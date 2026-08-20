@@ -1,4 +1,4 @@
-# Diagrama de contexto — Plataforma estadual de interoperabilidade em saúde
+# Diagrama de contexto - Plataforma estadual de interoperabilidade em saúde
 
 **Sistema central:** Plataforma estadual de interoperabilidade em saúde.
 
