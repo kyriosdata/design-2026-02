@@ -1,0 +1,22 @@
+@startuml
+skinparam monochrome true
+skinparam shadowing false
+skinparam defaultTextAlignment left
+
+title Gestão de Riscos da Estratégia (FHIR / RAC / SISCAN)
+
+package "Riscos e Tratamentos" {
+  [**1. Disciplina virar curso de FHIR**\nTratamento: Avaliar decisões, atributos de qualidade e fornecer exemplos.] as R1
+  [**2. Excesso de tecnologias**\nTratamento: Núcleo pequeno, frentes paralelas e integrações incrementais.] as R2
+  [**3. Dependência entre equipes**\nTratamento: Contratos antecipados, substitutos de teste e testes de consumidor.] as R3
+  [**4. Regras clínicas inventadas**\nTratamento: Fornecer recortes oficiais e conjuntos de dados esperados.] as R4
+  [**5. Confundir protótipo com sistema seguro**\nTratamento: Declarar limites, dados sintéticos e análise de segurança.] as R5
+  [**6. Perfis externos mudarem**\nTratamento: Fixar pacotes e terminologias por versão no início.] as R6
+  [**7. RAC tratado como IPS**\nTratamento: Matriz semântica, nova Composition e proveniência.] as R7
+  [**8. Portal, manual e perfil divergirem**\nTratamento: Portal como fonte operacional, cópias arquivadas e ADRs.] as R8
+  [**9. Trabalho concentrado em poucos**\nTratamento: Responsabilidade explícita, rotação e defesa individual.] as R9
+  [**10. Montador IPS virar repositório**\nTratamento: TTL absoluto, sem busca externa e critérios de exclusão.] as R10
+  [**11. Alertas produzirem fadiga**\nTratamento: Poucos serviços, cenários específicos e medição de aceitação.] as R11
+  [**12. API SISCAN mudar/divergir**\nTratamento: Arquivar cópias e executar testes de contrato.] as R12
+}
+@enduml
