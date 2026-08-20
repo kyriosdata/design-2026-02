@@ -1,0 +1,71 @@
+@startuml
+skinparam defaultTextAlignment center
+skinparam wrapWidth 200
+skinparam maxMessageSize 150
+
+' Configurações visuais simulando o C4 Model
+skinparam rectangle {
+    StereotypeFontSize 12
+    shadowing false
+    roundCorner 8
+}
+
+skinparam rectangle<<person>> {
+    BackgroundColor #08427b
+    FontColor #ffffff
+    BorderColor #073B6F
+}
+
+skinparam rectangle<<system>> {
+    BackgroundColor #1168bd
+    FontColor #ffffff
+    BorderColor #3C7FC0
+}
+
+skinparam rectangle<<external>> {
+    BackgroundColor #999999
+    FontColor #ffffff
+    BorderColor #8A8A8A
+}
+
+skinparam arrow {
+    Color #666666
+    FontColor #666666
+    FontSize 12
+}
+
+title Diagrama de Contexto (C4 Model) - Plataforma de Saúde Integrada
+
+' Pessoas
+rectangle "== Pessoa Atendida\n<size:12>[Pessoa]</size>\n\nPaciente que recebe o atendimento e cujos dados clínicos são registrados." as pessoa_atendida <<person>>
+rectangle "== Profissional de Saúde\n<size:12>[Pessoa]</size>\n\nMédicos, enfermeiros e equipes clínicas que prestam atendimento." as profissional <<person>>
+rectangle "== Gestor de Saúde\n<size:12>[Pessoa]</size>\n\nProfissional responsável pelo acompanhamento, elaboração de políticas públicas e gestão de saúde." as gestor <<person>>
+
+' Sistemas Clientes / Administrativos
+rectangle "== Sistemas Clientes\n<size:12>[Sistema Externo]</size>\n\nPEPs e aplicações clínicas simuladas que produzem e consomem informações estruturadas da plataforma." as pep_simulado <<external>>
+rectangle "== Sistema Aplicação Administrativa\n<size:12>[Sistema]</size>\n\nSistema voltado para análise estratégica, criação de indicadores e apoio à elaboração de políticas públicas." as app_admin <<system>>
+
+' Sistema Central (Foco)
+rectangle "== Plataforma GO\n<size:12>[Sistema]</size>\n\nSistema central que provê serviços de interoperabilidade, validação e processamento de dados clínicos no padrão FHIR R4." as plataforma <<system>>
+
+' Sistemas Externos
+rectangle "== RNDS\n<size:12>[Sistema Externo]</size>\n\nRede Nacional de Dados em Saúde. Recebe e disponibiliza dados clínicos em âmbito nacional." as rnds <<external>>
+rectangle "== Plataforma Estadual PAR\n<size:12>[Sistema Externo]</size>\n\nSistema estadual parceiro responsável pela consolidação regional de dados." as plataforma_estadual <<external>>
+rectangle "== SISCAN\n<size:12>[Sistema Externo]</size>\n\nSistema de Informação do Câncer. Processa dados de exames e acompanhamento oncológico." as siscan <<external>>
+rectangle "== Outras Plataformas\n<size:12>[Sistema Externo]</size>\n\nOutros ecossistemas de saúde e plataformas de terceiros integrados." as outras_plataformas <<external>>
+
+' Relacionamentos
+pessoa_atendida .down.> pep_simulado : "Acessa informações e\nrecebe atendimento"
+profissional .down.> pep_simulado : "Registra e consulta\ndados de saúde"
+
+gestor .down.> app_admin : "Acessa para elaboração\nde políticas públicas"
+
+pep_simulado .down.> plataforma : "Envia e consome modelos\n(RAC, IPS, REPM, REDFM)\n[HTTPS / FHIR R4]"
+app_admin .down.> plataforma : "Consome dados agregados\ne indicadores\n[HTTPS / API]"
+
+plataforma .down.> rnds : "Envia e busca documentos\n[Contrato RNDS / FHIR]"
+plataforma .down.> plataforma_estadual : "Intercambia dados estaduais\n[Contrato PAR / FHIR]"
+plataforma .down.> siscan : "Envia dados de rastreamento\n[Contrato SISCAN / Adaptador FHIR]"
+plataforma .down.> outras_plataformas : "Interoperabilidade e\ntroca de dados\n[HTTPS / API / FHIR]"
+
+@enduml
