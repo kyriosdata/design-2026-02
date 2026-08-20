@@ -1,0 +1,21 @@
+@startuml C4_Context_Plataforma_Interoperabilidade
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+LAYOUT_WITH_LEGEND()
+title Diagrama de Contexto — Plataforma Estadual de Interoperabilidade em Saúde
+Person(operador, "Operador", "Operador da plataforma")
+System(plataforma, "Plataforma Estadual de Interoperabilidade em Saúde", "Conecta sistemas participantes de uma UF por meio de serviços de interoperabilidade baseados em HL7 FHIR")
+System_Ext(clinicas, "Aplicações Clínicas", "Sistemas clientes que produzem e consomem recursos e documentos FHIR (prontuários, portais de pacientes etc.)")
+System_Ext(administrativas, "Aplicações Administrativas", "Sistemas clientes que consultam indicadores e dados operacionais da plataforma")
+System_Ext(outras_plataformas, "Outras Plataformas", "Instâncias estaduais de outras UFs que trocam dados diretamente por contrato federado entre pares")
+System_Ext(rnds, "RNDS", "Rede Nacional de Dados em Saúde — fonte e destino nacionais de documentos e registros")
+System_Ext(siscan, "SISCAN", "Sistema nacional de informação do câncer, acessado por sua API nativa")
+System_Ext(icp_brasil, "ICP-Brasil", "Infraestrutura de Chaves Públicas Brasileira — emite e valida certificados digitais")
+Rel(operador, plataforma, "Opera")
+Rel(clinicas, plataforma, "Envia e recebe recursos FHIR", "HTTPS / FHIR R4")
+Rel(administrativas, plataforma, "Consulta indicadores e dados operacionais", "HTTPS / FHIR R4")
+Rel(plataforma, outras_plataformas, "Troca RAC e IPS diretamente", "Contrato federado entre pares")
+Rel(plataforma, rnds, "Publica e consulta documentos", "RAC, IPS")
+Rel(plataforma, siscan, "Encaminha requisições e recebe laudos", "REST / JSON nativo do SISCAN")
+Rel(icp_brasil, plataforma, "Emite certificados digitais")
+Rel(icp_brasil, clinicas, "Emite certificados digitais")
+@enduml
