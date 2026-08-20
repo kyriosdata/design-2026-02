@@ -1,0 +1,18 @@
+@startuml
+actor "Operador da Plataforma" as operador
+
+rectangle "Plataforma estadual de\ninteroperabilidade em saúde" as plataforma
+
+rectangle "SISCAN" as siscan
+rectangle "Aplicação\nAdministrativa" as app_admin
+rectangle "Outra plataforma\nde interoperabilidade" as outra_plataforma
+rectangle "Aplicação Clínica" as app_clinica
+rectangle "RNDS" as rnds
+
+plataforma ..> operador
+plataforma ..> siscan
+plataforma ..> app_admin
+plataforma ..> outra_plataforma
+plataforma ..> app_clinica
+plataforma ..> rnds
+@enduml
