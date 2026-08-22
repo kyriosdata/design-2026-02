@@ -1,0 +1,33 @@
+@startuml C4_Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title Diagrama de Contexto (Nível 1) - Plataforma Estadual de Interoperabilidade em Saúde
+
+' Personas
+Person(pessoas, "Pessoas (Atendidos, Profissionais, Gestores)", "Interagem com as aplicações clínicas e PEPs nos estabelecimentos de saúde.")
+Person(operador, "Pessoa ou equipe responsável por operar a plataforma.", "Interage somente com a plataforma de Interoperabilidade.")
+' Sistema Principal
+System(plataforma, "Plataforma Estadual de Interoperabilidade em Saúde", "Conjunto de serviços executáveis (Gateway, Servidor FHIR, Montador IPS, etc.) que integra os sistemas participantes de uma UF.")
+
+' Sistemas Externos / Clientes
+System_Ext(aplicacoes_clinicas, "Aplicações Clínicas / PEPs (Sistemas Clientes)", "Produzem e consomem recursos e documentos FHIR a partir de eventos assistenciais sintéticos.")
+System_Ext(plataforma_par, "Outras plataformas", "Instância de outra unidade federativa, ou não, com a qual a plataforma troca dados diretamente.")
+System_Ext(rnds, "RNDS Simulada", "Rede Nacional de Dados em Saúde. Fonte e destino nacional de documentos e registros (RAC, IPS).")
+System_Ext(siscan, "API SISCAN Simulada", "Sistema de Informação do Câncer. Recebe e processa integrações via API REST com JSON nativo.")
+System_Ext(aa, "Aplicação Administrativa", "Para gestores, como o secretário da saúde, obter informações pertinentes à gestão do estado.")
+
+' Relacionamentos
+Rel(pessoas, aplicacoes_clinicas, "Utiliza para registro e consulta clínica")
+Rel(aplicacoes_clinicas, plataforma, "Envia/recebe recursos e aciona fluxos de interoperabilidade", "FHIR / HTTP")
+Rel(plataforma, aplicacoes_clinicas, "")
+Rel(plataforma_par, plataforma, "")
+Rel(plataforma, plataforma_par, "Compartilha e troca informações de saúde interestaduais", "Contrato Federado")
+Rel(rnds, plataforma, "")
+Rel(plataforma, rnds, "Valida, publica e consulta documentos (RAC, IPS, etc.)", "FHIR")
+Rel(siscan, plataforma, "")
+Rel(plataforma, siscan, "Traduz e envia solicitações e laudos de exames", "JSON nativo / REST")
+Rel(operador, plataforma, "Faz requisições e consulta a plataforma.", "Administrador do sistema.")
+Rel(plataforma, operador, "Retorna informação desejada")
+Rel(plataforma, aa, "Recebe dados pertinentes para a gestão do Estado.")
+SHOW_LEGEND()
+@enduml
