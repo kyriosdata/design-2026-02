@@ -1,0 +1,29 @@
+@startuml Contexto_RNDS_SISCAN
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Diagrama de Contexto (C4) com destaque de contêiner\nIntegrações independentes com RNDS simulada e API SISCAN simulada (item 5, passo 6)
+
+Person(estabelecimento, "Estabelecimento de Saúde", "Representado por um PEP simulado que produz e consome recursos e documentos FHIR")
+
+System_Boundary(plataforma, "Plataforma Estadual de Interoperabilidade em Saúde") {
+    Container(gateway, "Gateway de Integração", "Ponto de entrada", "Autentica, aplica políticas e encaminha a solicitação ao serviço responsável")
+    Container(adaptador, "Adaptador de Interoperabilidade FHIR-SISCAN")
+}
+
+System_Ext(rnds, "RNDS simulada", "Fonte e destino nacionais de documentos FHIR (RAC, IPS, REPM, REDFM)")
+System_Ext(siscan, "API SISCAN simulada", "Contrato nativo (JSON/REST) do Sistema de Informação do Câncer para requisição e laudo de exames")
+
+Rel(estabelecimento, gateway, "Envia e recebe recursos/documentos FHIR")
+
+Rel(gateway, adaptador, "Encaminha ao serviço responsável pela integração SISCAN")
+Rel(gateway, rnds, "Encaminha e publica/consulta documentos FHIR")
+Rel(rnds, gateway, "Retorna confirmação, identificador RNDS e conteúdo dos documentos")
+
+Rel(adaptador, siscan, "Envia requisição/laudo já traduzido para o DTO nativo")
+Rel(siscan, adaptador, "Envia e requisita documento no DTO nativo, retorna codigoProcesso")
+
+SHOW_LEGEND()
+
+@enduml
