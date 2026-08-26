@@ -1,0 +1,45 @@
+@startuml
+skinparam style strictuml
+top to bottom direction
+
+class ClienteSistema {
+    +clientId : String
+    +tokenJWT : String
+    +enviarRequisicao(endpoint, payload)
+}
+
+class GatewayIntegracao {
+    +processarRequisicao(requisicaoHTTP) : RespostaHTTP
+    -autenticar(tokenJWT) : ContextoAutenticacao
+    -aplicarPoliticas(contexto, requisicaoHTTP) : PoliticaResult
+    -encaminhar(servicoDestino, requisicaoHTTP) : RespostaHTTP
+}
+
+class ServicoAutenticacao {
+    +validarToken(tokenJWT) : TokenValidoResult
+    +extrairPermissoes(tokenJWT) : ListaPermissoes
+}
+
+class AvaliadorPoliticas {
+    +validarRateLimit(clientId) : Boolean
+    +validarAutorizacao(contexto, rota) : Boolean
+    +validarEnvelope(requisicaoHTTP) : Boolean
+}
+
+class RoteadorServicos {
+    +identificarServico(rota) : ServicoDestino
+    +despachar(servicoDestino, requisicaoHTTP) : RespostaHTTP
+}
+
+interface ServicoDestino {
+    +processar(payload)
+}
+
+' Relacionamentos estritamente restritos ao Gateway
+ClienteSistema ..> GatewayIntegracao : 1. Envia Requisição HTTP
+GatewayIntegracao --> ServicoAutenticacao : 2. Autentica
+GatewayIntegracao --> AvaliadorPoliticas : 3. Aplica Políticas
+GatewayIntegracao --> RoteadorServicos : 4. Delega Roteamento
+RoteadorServicos .down.> ServicoDestino : 5. Encaminha Solicitação
+
+@endl
