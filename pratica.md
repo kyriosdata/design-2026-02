@@ -87,7 +87,7 @@ Em particular, RAC e IPS são tipos de documento clínico, não componentes. O *
 4. (Caio) Em uma troca interestadual, o Gateway da plataforma de origem entrega os dados diretamente ao Gateway da plataforma estadual destinatária pelo contrato federado entre pares.
 5. (Abraão) Em integrações independentes desse intercâmbio, a RNDS simulada recebe ou fornece documentos FHIR, e a API SISCAN simulada recebe seu contrato JSON nativo.
 6. O Servidor FHIR mantém o estado clínico sintético compartilhado para buscas, notificações, medidas e apoio à decisão.
-7. Quando solicitado, o Montador recebe fatos já selecionados de RACs e de outras fontes, aplica regras determinísticas versionadas e produz um novo IPS com proveniência explícita.
+7. (João Vítor) Quando solicitado, o Montador recebe fatos já selecionados de RACs e de outras fontes, aplica regras determinísticas versionadas e produz um novo IPS com proveniência explícita.
 
 Esse encadeamento é a visão inicial. Versões, hashes, rotas, cardinalidades e regras de cada padrão aparecem depois como material de consulta durante os incrementos.
 
