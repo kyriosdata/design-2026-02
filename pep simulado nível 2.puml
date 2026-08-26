@@ -1,0 +1,31 @@
+@startuml
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+
+title C4 nível 2 — PEP simulado produz recursos ou documentos FHIR a partir de um evento assistencial sintético
+
+System_Boundary(pep, "PEP simulado") {
+
+  Container(app, "Aplicação clínica simulada", "Sistema cliente mínimo", "Gera o evento assistencial sintético e produz, a partir dele, os recursos clínicos e o documento clínico FHIR. Somente dados sintéticos.")
+
+  Container(cliente_fhir, "Cliente FHIR", "HTTPS, application/fhir+json", "Envia e recebe recursos e documentos FHIR e aciona os fluxos necessários às demonstrações.")
+}
+
+System_Ext(plataforma, "Serviços de interoperabilidade", "Plataforma estadual que recebe os recursos e documentos pelos contratos publicados. Objeto de projeto da disciplina; fronteira deste diagrama.")
+
+Rel(app, cliente_fhir, "Entrega para envio", "Observation e Bundle type=document")
+Rel(cliente_fhir, plataforma, "Envia recursos e documentos FHIR", "HTTPS / application/fhir+json")
+Rel_Back(cliente_fhir, plataforma, "Recebe recursos e notificações", "HTTPS / application/fhir+json")
+
+note right of app
+  Evento assistencial sintético = Encounter (FHIR R4)
+  Recurso FHIR = Observation (FHIR R4)
+  Documento clínico FHIR = Bundle type=document,
+  com Composition, Encounter e Observation como entradas
+
+  No nível 2 esses artefatos são carga das relações,
+  não contêineres. A estrutura interna deles está no
+  diagrama de classes do modelo de informação.
+end note
+
+SHOW_LEGEND()
+@enduml
