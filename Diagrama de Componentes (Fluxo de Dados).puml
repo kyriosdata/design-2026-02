@@ -1,0 +1,32 @@
+@startuml
+!theme plain
+skinparam componentStyle rectangle
+skinparam ArrowColor #005073
+skinparam packageBackgroundColor white
+
+package "Fontes de Dados" {
+  component "Fatos Selecionados:\nRAC 1 (Atendimento A)" as RAC1 #e1f5fe
+  component "Fatos Selecionados:\nRAC 2 (Atendimento B)" as RAC2 #e1f5fe
+  component "Outras Fontes\n(ex: Exames, Cadastros)" as OutrasFontes #e1f5fe
+}
+
+package "Montador Efêmero de IPS" {
+  database "Repositório de Regras\n(Versionadas v1.0)" as Regras #fff3e0
+  component "Módulo de Reconciliação\n(Elimina duplicatas e conflitos)" as Reconciliacao #fff3e0
+  component "Gerador de Proveniência\n(Mapeia Origem dos Dados)" as Proveniencia #fff3e0
+  component "Construtor FHIR\n(Monta Bundle e Composition BRIPS)" as Construtor #fff3e0
+}
+
+package "Resultado" {
+  artifact "Novo Documento IPS\n(Bundle.type = document)" as IPS #e8f5e9
+}
+
+RAC1 --> Reconciliacao
+RAC2 --> Reconciliacao
+OutrasFontes --> Reconciliacao
+
+Regras -left-> Reconciliacao : Aplica Regras\nDeterminísticas
+Reconciliacao --> Proveniencia
+Proveniencia --> Construtor
+Construtor --> IPS : Gera
+@enduml
