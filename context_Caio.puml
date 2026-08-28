@@ -10,8 +10,8 @@ System(plataformaGO, "Plataforma GO", "Plataforma estadual de saúde responsáve
 
 ' Atores e Aplicações Internas/Clientes (Em Cinza - Ext)
 Person_Ext(operador, "Operador", "Profissional de TI/Suporte responsável pelo monitoramento e gestão da plataforma.")
-System_Ext(appClinica, "Aplicação Clínica", "Sistema de atendimento e registro assistencial (prontuários, diagnósticos e prescrições).")
-System_Ext(appAdmin, "Aplicação Administrativa", "Sistema para gestão operacional, faturamento e regulação de estabelecimentos de saúde.")
+System_Ext(appClinica, "Aplicação Clínica", "Sistema de atendimento e registro assistencial (prontuários, diagnósticos e prescrições),  faturamento de estabelecimentos de saúde.")
+System_Ext(appAdmin, "Aplicação Administrativa", "Sistema para gestão operacional.")
 
 ' Sistemas Externos (Em Cinza - Ext)
 System_Ext(siscan, "SISCAN", "Sistema de Informação do Câncer (Ministério da Saúde).")
