@@ -1,0 +1,11 @@
+
+# <tipo>[(escopo)][!]: <descrição no imperativo, até 72 caracteres, sem ponto final>
+#
+# Deixe uma linha em branco antes do corpo, que explica o quê e o porquê.
+#
+# Rodapés opcionais, um por linha:
+#   Refs: #123
+#   BREAKING CHANGE: descrição da incompatibilidade introduzida
+#
+# Tipos: build, chore, ci, docs, feat, fix, perf, refactor, revert, style, test
+# Convenção completa: CONTRIBUTING.md
