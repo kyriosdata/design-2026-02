@@ -34,6 +34,7 @@ Essas nove responsabilidades são o ponto de partida de ambas as arquiteturas ca
 - ASR-6 Escalabilidade: volume potencialmente alto de publicações concorrentes, herdado do requisito de escala da plataforma nacional como um todo.
 
 ## 4. Arquitetura Candidata 1 — menor número de contêineres, maior modularidade interna
+![alternativa1](/publicacao-rac-alternativa1.png)
 
 ```plantuml
 @startuml Publicacao_RAC_Alternativa_1
@@ -79,6 +80,7 @@ Essa alternativa prioriza simplicidade operacional (menos peças para implantar,
 
 ## 5. Arquitetura Candidata 2 — serviços mais especializados
 
+![alternativa1](/publicacao-rac-alternativa2.png)
 ```plantuml
 @startuml Publicacao_RAC_Alternativa_2
 !include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
@@ -159,6 +161,8 @@ O custo dessa alternativa é o aumento de saltos de rede entre contêineres, mai
 Em nenhuma das duas alternativas o RAC em si é persistido dentro da plataforma nesta fatia — ele é validado e encaminhado à RNDS, que é a fonte de verdade documental. O que a plataforma retém localmente é só o metadado de correlação e idempotência, nunca o conteúdo clínico do documento.
 
 ## 7. Diagrama de sequência — fluxo principal (alternativa escolhida)
+
+![diagrama-sequencia](/diagrama-sequencia-alternativa2.png)
 
 ```plantuml
 @startuml Publicacao_RAC_Fluxo_Principal
