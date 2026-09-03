@@ -1,0 +1,11 @@
+#!/usr/bin/env sh
+#
+# Hook commit-msg: rejeita mensagens fora do Conventional Commits 1.0.0.
+#
+# Ative uma unica vez por clone, na raiz do repositorio:
+#   git config core.hooksPath .githooks
+
+set -u
+
+raiz=$(git rev-parse --show-toplevel) || exit 1
+exec sh "${raiz}/.github/scripts/valida-mensagem-commit.sh" "$1"

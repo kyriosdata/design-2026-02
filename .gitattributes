@@ -1,0 +1,6 @@
+# Normaliza finais de linha no repositório.
+* text=auto
+
+# Interpretados por sh: exigem LF também na cópia de trabalho, inclusive no Windows.
+*.sh text eol=lf
+.githooks/** text eol=lf
