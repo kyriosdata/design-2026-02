@@ -1,0 +1,57 @@
+@startuml
+skinparam classAttributeIconSize 0
+skinparam shadowing false
+hide circle
+
+title Modelo de informação — o que o PEP simulado produz
+
+class EventoAssistencialSintetico <<Encounter FHIR R4>> {
+  +identificador
+  +periodo
+  +tipoDeAtendimento
+  +status
+}
+
+class RecursoClinico <<Observation FHIR R4>> {
+  +id
+  +resourceType
+  +versionId
+  +codigo
+  +valor
+}
+
+class DocumentoClinicoFHIR <<Bundle document FHIR R4>> {
+  +identificador
+  +timestamp
+}
+
+class Composicao <<Composition FHIR R4>> {
+  +tipoDeDocumento
+  +titulo
+  +autoria
+  +data
+}
+
+class PessoaAtendida <<Patient FHIR R4>> {
+  +identificadorSintetico
+}
+
+class ProfissionalDeSaude <<Practitioner FHIR R4>> {
+  +identificacao
+}
+
+EventoAssistencialSintetico "*" --> "1" PessoaAtendida : refere
+EventoAssistencialSintetico "*" --> "1..*" ProfissionalDeSaude : envolve
+RecursoClinico "*" --> "1" EventoAssistencialSintetico : produzido em
+RecursoClinico "*" --> "1" PessoaAtendida : refere
+DocumentoClinicoFHIR "1" *-- "1" Composicao : primeira entrada
+DocumentoClinicoFHIR "1" *-- "1" EventoAssistencialSintetico : entrada
+DocumentoClinicoFHIR "1" *-- "1..*" RecursoClinico : entradas
+Composicao "1" --> "1" EventoAssistencialSintetico : contextualiza
+
+note bottom of DocumentoClinicoFHIR
+  Um Bundle também é um recurso FHIR.
+  A generalização cabe aqui, no modelo de
+  informação — não no diagrama C4.
+end note
+@enduml
