@@ -81,13 +81,13 @@ Em particular, RAC e IPS são tipos de documento clínico, não componentes. O *
 
 ## 6. Encadeamento do sistema em sete passos
 
-1. Um PEP simulado produz recursos ou documentos FHIR a partir de um evento assistencial sintético.
-2. O Gateway autentica, aplica políticas e encaminha a solicitação ao serviço responsável.
+1. (Marina) Um PEP simulado produz recursos ou documentos FHIR a partir de um evento assistencial sintético.
+2. (Cristina) O Gateway autentica, aplica políticas e encaminha a solicitação ao serviço responsável.
 3. Serviços especializados validam, correlacionam ou traduzem a informação sem substituir a responsabilidade clínica dos sistemas de origem e dos profissionais responsáveis.
-4. Em uma troca interestadual, o Gateway da plataforma de origem entrega os dados diretamente ao Gateway da plataforma estadual destinatária pelo contrato federado entre pares.
-5. Em integrações independentes desse intercâmbio, a RNDS simulada recebe ou fornece documentos FHIR, e a API SISCAN simulada recebe seu contrato JSON nativo.
+4. (Caio) Em uma troca interestadual, o Gateway da plataforma de origem entrega os dados diretamente ao Gateway da plataforma estadual destinatária pelo contrato federado entre pares.
+5. (Abraão) Em integrações independentes desse intercâmbio, a RNDS simulada recebe ou fornece documentos FHIR, e a API SISCAN simulada recebe seu contrato JSON nativo.
 6. O Servidor FHIR mantém o estado clínico sintético compartilhado para buscas, notificações, medidas e apoio à decisão.
-7. Quando solicitado, o Montador recebe fatos já selecionados de RACs e de outras fontes, aplica regras determinísticas versionadas e produz um novo IPS com proveniência explícita.
+7. (João Vítor) Quando solicitado, o Montador recebe fatos já selecionados de RACs e de outras fontes, aplica regras determinísticas versionadas e produz um novo IPS com proveniência explícita.
 
 Esse encadeamento é a visão inicial. Versões, hashes, rotas, cardinalidades e regras de cada padrão aparecem depois como material de consulta durante os incrementos.
 
