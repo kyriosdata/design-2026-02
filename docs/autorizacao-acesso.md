@@ -1,4 +1,4 @@
-A proposta de autorização é utilizando apenas o GOV.BR como mecanismo de autenticação. 
+# A proposta de autorização é utilizando apenas o GOV.BR como mecanismo de autenticação. 
 
 Um caso em que vamos usar para ilustrar o modo de concessão de acesso aos dados pela parte do paciente ao estabelecimento de saúde é:
 
