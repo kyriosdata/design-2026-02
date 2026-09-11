@@ -1,0 +1,60 @@
+@startuml C4_Context
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+title Diagrama de Contexto (Nível 1) - Plataforma Estadual de Interoperabilidade em Saúde
+
+' ===================== Pessoas =====================
+Person(paciente, "Pessoa Atendida (Paciente)", "Busca continuidade do cuidado, privacidade e acesso aos próprios dados. Autentica-se via GOV.BR.")
+Person(profissional, "Profissional de Saúde", "Registra atendimentos, prescreve, dispensa ou administra medicamentos e consulta o histórico clínico do paciente.")
+Person(gestor, "Gestor (Secretaria Municipal/Estadual)", "Responsável por cadastro de estabelecimentos, coordenação regional e indicadores.")
+Person(dpo, "DPO / Encarregado de Dados", "Responsável pela base legal, minimização, trilha de auditoria e consentimento.")
+Person(operador, "Operador da Plataforma", "Equipe de operação responsável por observabilidade, recuperação e diagnóstico de falhas da plataforma.")
+
+' ===================== Sistema Principal =====================
+System(plataforma, "Plataforma Estadual de Interoperabilidade em Saúde", "Conjunto de serviços executáveis (Gateway, Servidor FHIR, Servidor AuthZ, Montador IPS, Serviço de Medicamentos, Adaptador FHIR-SISCAN etc.) que integra os sistemas participantes de uma UF.")
+
+' ===================== Sistemas Externos =====================
+System_Ext(aplicacoes_clinicas, "Aplicações Clínicas / PEPs (AC)", "Sistemas clientes que produzem e consomem recursos e documentos FHIR a partir de eventos assistenciais. Usados por pacientes e profissionais de saúde.")
+System_Ext(govbr, "GOV.BR", "Provedor nacional de identidade digital (SSO). Realiza AuthN/AuthZ dos usuários finais para as Aplicações Clínicas e para a Plataforma.")
+System_Ext(cadastro_estabelecimento, "Sistema de Cadastro de Estabelecimento", "Registro dos estabelecimentos de saúde participantes, mantido/gerido pelo Gestor.")
+System_Ext(plataforma_par, "Outra Plataforma Estadual", "Instância de outra unidade federativa com a qual a plataforma troca dados diretamente por contrato federado.")
+System_Ext(rnds, "RNDS Simulada", "Rede Nacional de Dados em Saúde. Fonte e destino nacional de documentos (RAC, IPS), sem função de intermediária entre UFs.")
+System_Ext(siscan, "API SISCAN Simulada", "Sistema de Informação do Câncer. Recebe e processa requisição/laudo via contrato JSON nativo, não FHIR.")
+System_Ext(aa, "Aplicação Administrativa", "Consumida por gestores (ex.: secretário de saúde) para obter indicadores e informações de gestão do estado.")
+
+' ===================== Relacionamentos: Pessoas =====================
+Rel(paciente, aplicacoes_clinicas, "Acessa informações e histórico de saúde")
+Rel(profissional, aplicacoes_clinicas, "Registra atendimentos, prescrições e consultas clínicas")
+Rel(paciente, govbr, "Autentica-se (AuthN/AuthZ)")
+Rel(profissional, govbr, "Autentica-se (AuthN/AuthZ)")
+
+Rel(gestor, cadastro_estabelecimento, "Cadastra e mantém dados dos estabelecimentos")
+Rel(gestor, aa, "Consulta indicadores e informações de gestão")
+
+Rel(dpo, plataforma, "Realiza auditoria e verifica consentimento", "Trilha de auditoria")
+
+Rel(operador, plataforma, "Opera, monitora e diagnostica falhas")
+Rel(plataforma, operador, "Expõe métricas, logs e alertas")
+
+' ===================== Relacionamentos: Aplicações Clínicas <-> Plataforma =====================
+Rel(aplicacoes_clinicas, plataforma, "Envia/recebe recursos FHIR e aciona fluxos de interoperabilidade", "FHIR / HTTPS")
+Rel(plataforma, aplicacoes_clinicas, "Retorna resultados, notificações e apoio à decisão", "FHIR / CDS Hooks")
+Rel(aplicacoes_clinicas, govbr, "Delegam autenticação do usuário final", "OpenID Connect")
+Rel(plataforma, govbr, "Valida identidade e autorização (Servidor AuthZ)", "OAuth2 / OIDC")
+
+' ===================== Relacionamentos: Plataforma <-> Sistemas Externos =====================
+Rel(plataforma, cadastro_estabelecimento, "Consulta dados de estabelecimentos participantes")
+
+Rel(plataforma, plataforma_par, "Compartilha e troca informações de saúde interestaduais (IPS)", "Contrato Federado")
+Rel(plataforma_par, plataforma, "Compartilha e troca informações de saúde interestaduais (IPS)", "Contrato Federado")
+
+Rel(plataforma, rnds, "Valida, publica e consulta documentos (RAC, IPS)", "FHIR")
+Rel(rnds, plataforma, "Retorna documentos e confirmações de publicação", "FHIR")
+
+Rel(plataforma, siscan, "Traduz e envia requisições e recebe laudos de exames", "JSON nativo / REST")
+Rel(siscan, plataforma, "Retorna laudos preliminar, final e corrigido", "JSON nativo / REST")
+
+Rel(plataforma, aa, "Fornece indicadores e dados agregados para gestão")
+
+SHOW_LEGEND()
+@enduml
