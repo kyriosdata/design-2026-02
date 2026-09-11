@@ -10,11 +10,11 @@ System(plataformaGO, "Plataforma GO", "Plataforma estadual de saúde responsáve
 
 ' Atores e Aplicações Internas/Clientes (Em Cinza - Ext)
 Person_Ext(operador, "Operador", "Profissional de TI/Suporte responsável pelo monitoramento e gestão da plataforma.")
-System_Ext(appClinica, "Aplicação Clínica", "Sistema de atendimento e registro assistencial (prontuários, diagnósticos e prescrições),  faturamento de estabelecimentos de saúde.")
+System_Ext(appClinica, "Aplicação Clínica", "Sistema de atendimento e registro assistencial (prontuários, diagnósticos e prescrições), faturamento de estabelecimentos de saúde.")
 System_Ext(appAdmin, "Aplicação Administrativa", "Sistema para gestão operacional.")
 
 ' Sistemas Externos (Em Cinza - Ext)
-System_Ext(siscan, "SISCAN", "Sistema de Informação do Câncer (Ministério da Saúde).")
+System_Ext(siscan, "API SISCAN (Simulada)", "Sistema de Informação do Câncer (Ministério da Saúde), representado por simulador com contrato nativo REST/JSON.")
 System_Ext(rnds, "RNDS", "Rede Nacional de Dados em Saúde (Interoperabilidade Nacional).")
 System_Ext(cnes, "CNES", "Cadastro Nacional de Estabelecimentos de Saúde.")
 System_Ext(outrasPlataformas, "Plataformas Estaduais (Outros Estados)", "Sistemas de saúde de outras unidades federativas para intercâmbio de dados de pacientes.")
@@ -26,7 +26,6 @@ BiRel(appAdmin, plataformaGO, "Envia e consulta dados operacionais e administrat
 BiRel(plataformaGO, outrasPlataformas, "Intercambia histórico de saúde de pacientes transitórios", "REST / FHIR")
 BiRel(plataformaGO, rnds, "Transmite e recebe registros de saúde e imunização", "REST / FHIR")
 BiRel(plataformaGO, cnes, "Sincroniza e valida cadastro de profissionais e estabelecimentos", "Web Services / REST")
+BiRel(plataformaGO, siscan, "Envia requisições de exames e recebe resultados/laudos (via Adaptador FHIR-SISCAN)", "HTTPS / REST / JSON")
 
-' Relacionamento Unidirecional (SISCAN -> Plataforma GO)
-Rel(siscan, plataformaGO, "Envia dados de exames e laudos oncológicos", "REST / SOAP")
 @enduml
