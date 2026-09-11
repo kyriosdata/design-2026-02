@@ -1,0 +1,29 @@
+@startuml Diagrama_de_Contexto_Plataforma_Saude
+!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Context.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Diagrama de Contexto (Nível 1) - Plataforma de Interoperabilidade de Saúde
+
+Person(paciente, "Pessoa Atendida", "Consulta histórico e dados clínicos próprios.")
+Person(profissional, "Profissionais de Saúde", "Atenção primária, laboratórios e farmacêuticos que alimentam e consomem dados.")
+Person(gestor, "Gestores e Auditores", "Secretarias de saúde, auditores e operadores que acompanham indicadores, LGPD e logs.")
+
+System_Ext(pep, "Sistemas Clientes (PEPs)", "Prontuários eletrônicos e aplicações clínicas simuladas que produzem e consomem informações.")
+
+System(plataforma, "Plataforma de Interoperabilidade", "Sistema central (FHIR R4) que gerencia autenticação, validação, síntese IPS, serviços RNDS e adaptação SISCAN.")
+
+System_Ext(rnds, "RNDS Simulada", "Rede Nacional de Dados em Saúde. Repositório nacional para envio e consulta de documentos (RAC e IPS).")
+System_Ext(siscan, "API SISCAN Simulada", "Sistema Nacional de Informação do Câncer. Recebe informações em seu contrato JSON nativo.")
+System_Ext(plataforma_par, "Plataforma Estadual Par", "Instância de outra UF integrada para intercâmbio direto via contrato federado.")
+
+Rel(paciente, pep, "Acessa dados clínicos")
+Rel(profissional, pep, "Registra atendimentos e consulta sínteses")
+Rel(gestor, plataforma, "Consulta métricas, observabilidade e auditoria")
+
+Rel(pep, plataforma, "Envia eventos e solicita sínteses", "HTTPS / FHIR R4")
+Rel(plataforma, rnds, "Publica e recupera documentos clínicos (RAC e IPS)", "HTTPS / Web Service FHIR")
+Rel(plataforma, siscan, "Envia dados mapeados pelo Adaptador FHIR-SISCAN", "HTTPS / JSON Nativo")
+Rel(plataforma, plataforma_par, "Realiza troca interestadual direta", "HTTPS / Contrato Federado")
+
+@enduml
