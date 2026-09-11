@@ -3,24 +3,24 @@
 > **Carga Horária:** 128 horas (sala 105, Centro de Aulas Aroeira)  
 > **Domínio Mobilizador:** Interoperabilidade em Saúde  
 > **Padronização Base:** FHIR R4 (`4.0.1`)  
-> **Status:** Documento em evolução
+> **Status:** Documento em evolução (Proposta de Design)
 
 ---
 
 ## 📌 Sobre o Projeto
 
-Este repositório contém a infraestrutura e os serviços de uma **plataforma estadual de interoperabilidade em saúde**, desenvolvida como trabalho prático contínuo para a disciplina de **Design de Software**.
+Este repositório contém a **proposta de design arquitetural e especificação técnica** de uma plataforma estadual de interoperabilidade em saúde, estruturada como trabalho prático contínuo para a disciplina de **Design de Software**.
 
 O objetivo central do projeto é o **aprendizado contínuo em Design de Software** explorando problemas reais de integração distribuída, tais como: definição de fronteiras, modelos de consistência, concorrência, idempotência, resiliência a falhas, evolução de contratos e atributos de qualidade.
 
 > **⚠️ Aviso Importante / Finalidade Educacional:**  
-> Este projeto **não** pretende reproduzir ou substituir a RNDS oficial, substituir sistemas de saúde de produção ou processar dados reais de pacientes. Sistemas externos nacionais e outras UFs são representados por simuladores e contratos controlados; **todos os dados utilizados são estritamente sintéticos**.
+> Este projeto **não** pretende reproduzir ou substituir a RNDS oficial, substituir sistemas de saúde de produção ou processar dados reais de pacientes. Sistemas externos nacionais e outras UFs são representados por simuladores e contratos controlados; **todos os dados previstos no design são estritamente sintéticos**.
 
 ---
 
 ## 🎯 Escopo e Foco do Sistema
 
-O foco deste repositório está exclusivamente nos **serviços de interoperabilidade** que conectam sistemas participantes. Prontuários Eletrônicos (PEPs), portais de pacientes e sistemas departamentais de origem/destino **não** são o objeto de desenvolvimento principal e são representados apenas por clientes/simuladores mínimos.
+O foco deste repositório está exclusivamente na **especificação dos serviços de interoperabilidade** que conectam sistemas participantes. Prontuários Eletrônicos (PEPs), portais de pacientes e sistemas departamentais de origem/destino **não** são o objeto de desenvolvimento principal e são previstos apenas como clientes/simuladores mínimos.
 
 ### Jornadas Clínicas Cobertas
 1. **Continuidade do Cuidado:** Compartilhamento seguro de Registros de Atendimento Clínico (RAC) por atendimento e montagem/troca federada de Sumários Internacionais do Paciente (IPS).
@@ -31,7 +31,7 @@ O foco deste repositório está exclusivamente nos **serviços de interoperabili
 
 ## 🛠️ Arquitetura e Principais Componentes (C4 Level 2)
 
-A solução é composta por contêineres e serviços especializados que garantem a integração entre os sistemas:
+A solução é projetada com contêineres e serviços especializados para garantir a integração entre os sistemas:
 
 * **Gateway de Integração:** Ponto de entrada que realiza autenticação, autorização, aplicação de limites (*rate limiting*) e roteamento de requisições.
 * **Servidor FHIR R4:** Mantém o estado clínico sintético compartilhado para consultas e persistência.
@@ -43,9 +43,9 @@ A solução é composta por contêineres e serviços especializados que garantem
 
 ---
 
-## 📂 Linhas de Base Técnicas Fixadas
+## 📂 Linhas de Base Técnicas Fixadas (Planejadas)
 
-Para garantir a reprodutibilidade dos experimentos, os artefatos de entrada foram fixados e versionados localmente:
+Para garantir a reprodutibilidade dos experimentos, os artefatos de entrada e pacotes de referência adotados pela arquitetura são:
 
 | Domínio | Especificação / Pacote | Versão Fixada |
 | :--- | :--- | :--- |
@@ -59,21 +59,20 @@ Para garantir a reprodutibilidade dos experimentos, os artefatos de entrada fora
 
 ## 🚀 Estrutura de Incrementos de Implementação
 
-O projeto está organizado para ser construído em 4 incrementos verticais:
+O projeto é projetado para ser construído em 4 incrementos verticais:
 
 [ Incremento 1 ] ──► Publicar RAC na RNDS simulada (Gateway + Validação + RNDS)
 [ Incremento 2 ] ──► Integrar SISCAN via Adaptador FHIR (Requisição + Processamento + Laudo)
 [ Incremento 3 ] ──► Registrar e Correlacionar Ciclo de Medicamentos
 [ Incremento 4 ] ──► Montar IPS efêmero, Troca Interestadual Federada, Medidas CQL e CDS Hooks
 
-
 ---
 
-## 📋 Pré-requisitos para Execução
+## 📋 Pré-requisitos e Execução (Planejamento)
 
 * **Ambiente de Desenvolvimento:** Definido conforme a pilha adotada pela turma/equipe.
-* **Dados:** Utilizar **apenas dados sintéticos** disponibilizados nas massas de testes do repositório.
-* **Pacotes FHIR/OpenAPI:** Garantir que os pacotes locais armazenados nas pastas de artefatos do repositório sejam carregados pelo validador local.
+* **Dados:** Utilizar **apenas dados sintéticos** (previstos nas especificações de teste).
+* **Pacotes FHIR/OpenAPI:** Garantir que os pacotes locais especificados para a solução sejam carregados pelo validador local quando o ambiente for provisionado.
 
 ---
 
@@ -86,9 +85,21 @@ O projeto está organizado para ser construído em 4 incrementos verticais:
 
 ---
 
+## 🤝 Contribuindo
+
+O merge em `main` é feito por *squash*: o título do PR vira a mensagem do commit.
+Por isso, o título de cada PR deve seguir [Conventional Commits](https://www.conventionalcommits.org/pt-br/),
+no formato `<tipo>[(escopo)][!]: <descrição>`, com tipo em `build`, `chore`, `ci`, `docs`,
+`feat`, `fix`, `perf`, `refactor`, `revert`, `style` ou `test`.
+Exemplo: `docs: adiciona diagrama de sequência de autorização de acesso`.
+
+O check `conventional-commits` valida o título automaticamente em cada PR; basta editar o título para o check rodar de novo.
+
+---
+
 ## 📄 Referências Normativas e Técnicas
 
-* [Ementa da Disciplina e Materiais de Apoio](ementa.md)
+* [Documento Prático da Disciplina e Materiais de Apoio](pratica.md)
 * [Portal de Serviços DATASUS - RAC v2.0](https://portalservicos-datasus.saude.gov.br/servico/thZjxKwS4u)
 * [HL7 Brasil - Guia do IPS Brasil STU1](https://hl7.org.br/fhir/ips/)
 * [Portal de Serviços DATASUS - REDFM / REPM](https://portalservicos-datasus.saude.gov.br/servico/BBgfSNopOs)

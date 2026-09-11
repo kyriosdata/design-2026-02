@@ -1,0 +1,51 @@
+# Valida o título do PR segundo Conventional Commits (https://www.conventionalcommits.org).
+# O merge em `main` é feito por squash, então o título do PR vira a mensagem do commit.
+# O nome do job precisa ser exatamente `conventional-commits`: é o status check exigido
+# pelo ruleset "main protegida".
+name: conventional-commits
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  conventional-commits:
+    name: conventional-commits
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validar título do PR
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          tipos='build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test'
+          re="^(${tipos})(\([^()]+\))?!?: [^[:space:]].*$"
+
+          if [[ "$PR_TITLE" =~ $re ]]; then
+            echo "Título OK: $PR_TITLE"
+            echo "✅ Título do PR segue Conventional Commits: \`$PR_TITLE\`" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+
+          tipos_md="\`${tipos//|/\`, \`}\`"
+          echo "::error::Título do PR não segue Conventional Commits: \"$PR_TITLE\""
+          cat >> "$GITHUB_STEP_SUMMARY" <<EOF
+          ## ❌ Título do PR não segue Conventional Commits
+
+          Título atual: \`$PR_TITLE\`
+
+          Formato esperado: \`<tipo>[(escopo)][!]: <descrição>\`
+
+          Tipos aceitos: $tipos_md
+
+          Exemplos:
+          - \`docs: adiciona diagrama de sequência de autorização de acesso\`
+          - \`feat(auth): implementa autenticação por token\`
+          - \`fix!: corrige validação de sessão (breaking change)\`
+
+          O merge em \`main\` é feito por squash, então o título do PR vira a mensagem do commit.
+          Basta editar o título do PR: este check roda novamente de forma automática.
+          EOF
+          exit 1
