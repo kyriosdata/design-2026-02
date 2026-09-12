@@ -74,5 +74,5 @@ BiRel(plataformaGO, rnds, "Transmite e recebe registros de saúde e imunização
 BiRel(plataformaGO, cnes, "Sincroniza e valida cadastro de profissionais e estabelecimentos", "Web Services / REST")
 BiRel(plataformaGO, siscan, "Envia requisições de exames e recebe resultados/laudos (via Adaptador FHIR-SISCAN)", "HTTPS / REST / JSON")
 
-@endl
+@enduml
 ```
