@@ -1,0 +1,101 @@
+@startuml
+' Configurações de layout
+left to right direction
+skinparam packageStyle rectangle
+skinparam classAttributeIconSize 0
+
+' Pacote da Plataforma Estadual de Origem (UF-A)
+package "Plataforma Estadual de Origem (UF-A)" {
+    class GatewayOrigem <<Service>> {
+        - federatedContracts: List<ContractConfig>
+        + enviarDadosInterestadual(pacienteId: String, destinoUF: String, fhirBundle: Bundle, contextoUsuario: UserContext): OperationOutcome
+        - autenticarEmDestino(destinoUF: String): SecurityToken
+    }
+    
+    class ServidorFHIROrigem <<DataRepository>> {
+        + recuperarDocumentoClinico(id: String): Bundle
+    }
+    
+    class AuditLogOrigem <<Service>> {
+        + registrarEvento(evento: AuditEvent): void
+    }
+}
+
+' Pacote da Plataforma Estadual de Destino (UF-B)
+package "Plataforma Estadual de Destino (UF-B)" {
+    class GatewayDestino <<Service>> {
+        - trustedIssuers: List<PublicKey>
+        - activeContracts: List<ContractConfig>
+        + receberDadosFederados(encryptedPackage: EncryptedPackage, authHeader: String): OperationOutcome
+        - validarTokenFederado(token: String): boolean
+        - autorizarOperacao(token: String, operacao: String): boolean
+    }
+    
+    class ServidorFHIRDestino <<DataRepository>> {
+        + persistirRecurso(recurso: FHIRResource): id
+    }
+    
+    class AuditLogDestino <<Service>> {
+        + registrarEvento(evento: AuditEvent): void
+    }
+}
+
+' Conceitos Transversais e de Dados
+package "Conceitos Transversais e de Dados" {
+    class FederatedContract {
+        + contractId: String
+        + sourceUF: String
+        + destinationUF: String
+        + validity: Period
+        + allowedPurposes: List<String>
+        + securityPolicies: SecurityParams
+    }
+
+    class SecurityToken <<JWT>> {
+        + issuer: String (UF-A)
+        + audience: String (UF-B)
+        + subject: String (User/App)
+        + purposeOfUse: String
+        + scope: String
+        + signature: String
+    }
+
+    class EncryptedPackage {
+        + keyId: String
+        + algorithm: String
+        + ciphertext: byte[]
+        + recipient: String
+    }
+
+    abstract class FHIRResource {
+        + id: String
+        + resourceType: String
+    }
+
+    class Bundle {
+        + type: String = "document"
+        + entry: List<FHIRResource>
+    }
+}
+
+' 1. Conexão Segura Interestadual
+GatewayOrigem .right.> GatewayDestino : <<conecta via HTTPS>>\n<<requer TLS 1.3>>
+note bottom of GatewayOrigem : POST /fhir-federation/v1/receive
+
+' 2. Relacionamentos na Origem
+GatewayOrigem --> ServidorFHIROrigem : recupera dados
+GatewayOrigem --> AuditLogOrigem : audita despacho
+GatewayOrigem ..> SecurityToken : gera/assina token federado
+GatewayOrigem ..> FederatedContract : consulta termos
+
+' 3. Relacionamentos no Destino
+GatewayDestino --> ServidorFHIRDestino : persiste dados aceitos
+GatewayDestino --> AuditLogDestino : audita recebimento e autz
+GatewayDestino ..> SecurityToken : valida e extrai claims
+GatewayDestino ..> FederatedContract : valida conformidade
+GatewayDestino ..> EncryptedPackage : decifra
+
+' 4. Relacionamentos de Dados
+Bundle --|> FHIRResource
+EncryptedPackage ..> Bundle : encapsula (cifrado)
+@enduml
