@@ -1,4 +1,13 @@
-# A proposta de autorização é utilizando apenas o GOV.BR como mecanismo de autenticação. 
+# Proposta de autorização de acesso com GOV.BR
+
+> **Status:** alternativa de design em avaliação, ainda não aprovada como
+> requisito da plataforma. Sua adoção depende de decisão conjunta da equipe,
+> conforme [pratica.md](../pratica.md), seções 25 e 27.
+
+O fluxo abaixo propõe GOV.BR como mecanismo de autenticação e
+Expresso Goiás / MeuPEP como meio para o paciente autorizar acesso.
+Um eventual protótipo usará simuladores e dados exclusivamente sintéticos;
+esta proposta não autoriza integração com contas ou ambientes reais.
 
 Um caso em que vamos usar para ilustrar o modo de concessão de acesso aos dados pela parte do paciente ao estabelecimento de saúde é:
 

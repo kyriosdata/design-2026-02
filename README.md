@@ -87,6 +87,8 @@ O projeto é projetado para ser construído em 4 incrementos verticais:
 
 ## 🤝 Contribuindo
 
+Consulte a convenção completa e a configuração local em [CONTRIBUTING.md](CONTRIBUTING.md).
+
 O merge em `main` é feito por *squash*: o título do PR vira a mensagem do commit.
 Por isso, o título de cada PR deve seguir [Conventional Commits](https://www.conventionalcommits.org/pt-br/),
 no formato `<tipo>[(escopo)][!]: <descrição>`, com tipo em `build`, `chore`, `ci`, `docs`,
