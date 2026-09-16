@@ -1,33 +1,36 @@
-# Estratégia prática para a disciplina Design de Software
+# Proposta de arquitetura para uma plataforma de interoperabilidade em saúde
 
-> Carga horária: 128 horas (sala 105, Centro de Aulas Aroeira)  
-> Domínio mobilizador: interoperabilidade em saúde  
-> Contexto: estabelecimentos de saúde em geral  
-> Aviso: documento em evolução.
+> - Domínio: interoperabilidade em saúde
+> - Contexto: estabelecimentos de saúde em geral
+> - Equipe: oito integrantes, sob coordenação do responsável pelo repositório
+> - Planejamento: fases e marcos, com esforço e prazos definidos em conjunto
+> - Status: proposta em evolução, apoiada por protótipos selecionados.
 
 ## 1. Finalidade
 
-Esta proposta organiza a disciplina em torno de um trabalho prático contínuo. O conteúdo da disciplina não é apresentado como uma sequência isolada de tópicos. Cada conceito é introduzido quando uma necessidade do sistema torna insuficiente a solução até então adotada.
+Este documento define o trabalho de uma equipe de desenvolvimento de software responsável pela proposta de arquitetura de alto nível de uma plataforma estadual de interoperabilidade em saúde baseada em HL7 Fast Healthcare Interoperability Resources (FHIR).
 
-O trabalho consiste em projetar, prototipar, integrar e avaliar partes de uma plataforma estadual de interoperabilidade em saúde baseada em HL7 Fast Healthcare Interoperability Resources (FHIR).
+A entrega principal é a **proposta de arquitetura**, com fronteiras, responsabilidades, contratos, alternativas, decisões justificadas e cenários de qualidade. Protótipos e simuladores serão construídos pela equipe nos recortes selecionados em conjunto para verificar decisões e reduzir riscos; não se exige implementar integralmente todos os fluxos descritos neste documento.
 
-O objeto principal do trabalho é o **aprendizado contínuo em Design de Software**. 
+O foco é a **qualidade das decisões de Design de Software e das evidências que as sustentam**, não a quantidade de código. A linguagem e os artefatos devem refletir um cenário real de desenvolvimento, com responsabilidades, decisões, riscos e entregas explícitos.
 
 FHIR, Registro de Atendimento Clínico (RAC), Sumário Internacional do Paciente (IPS), Sistema de Informação do Câncer (SISCAN), Clinical Quality Language (CQL), CDS Hooks, Subscription e os modelos de medicamentos são restrições, contratos e fontes de problemas reais para a prática de design.
 
-O trabalho não pretende reproduzir ou substituir a RNDS (Rede Nacional de Dados em Saúde), substituir sistemas oficiais ou processar dados reais de pacientes. Sistemas externos nacionais serão representados por simuladores e contratos controlados. A finalidade é educacional.
+O trabalho não pretende reproduzir ou substituir a RNDS (Rede Nacional de Dados em Saúde), substituir sistemas oficiais ou processar dados reais de pacientes. Sistemas externos serão representados por simuladores e contratos controlados. Os protótipos não constituem uma plataforma de produção nem demonstram, por si, segurança para uso clínico real.
+
+As decisões de projeto são conjuntas, sob coordenação do responsável pelo repositório. Java e Spring Boot formam a plataforma básica; HAPI FHIR será usado para o servidor FHIR e o validador. As decisões confirmadas e as pendências estão na seção 27. As orientações operacionais para agentes de desenvolvimento ficam em [AGENTS.md](AGENTS.md), sem substituir este documento como definição do trabalho.
 
 ## 2. Foco: serviços de interoperabilidade entre sistemas participantes
 
 O foco do trabalho **não está nas aplicações clínicas de origem e destino**, ou seja, nas aplicações que produzem e consomem informações em saúde. Noutras palavras, prontuários, portais de pacientes ou sistemas departamentais que produzem e consomem informações serão representados por sistemas clientes mínimos, capazes de enviar e receber recursos FHIR e acionar os fluxos necessários às demonstrações da proposta de design. 
 
-O objeto de projeto e implementação são os **serviços de interoperabilidade que conectam esses sistemas**. 
+O objeto de projeto são os **serviços de interoperabilidade que conectam esses sistemas**. A implementação se limita aos protótipos e simuladores selecionados para verificar a proposta.
 
 Noutras palavras, inclui gateway, contratos e perfis FHIR, troca federada direta entre plataformas estaduais, validação e terminologia, adaptadores para contratos externos não FHIR, publicação e consulta de documentos na RNDS, montagem de IPS, interoperabilidade de medicamentos, notificações, medidas clínicas, apoio à decisão, identidade, segurança da informação, auditoria e observabilidade. A interface de um sistema cliente só será detalhada quando necessário para exercitar ou avaliar um desses serviços.
 
-Essa delimitação evita que as equipes construam vários prontuários incompletos e concentra a disciplina nos problemas de integração: fronteiras, responsabilidades, protocolos, estados distribuídos, concorrência, falhas, evolução e atributos de qualidade.
+Essa delimitação evita que a equipe construa vários prontuários incompletos e concentra o esforço nos problemas de integração: fronteiras, responsabilidades, protocolos, estados distribuídos, concorrência, falhas, evolução e atributos de qualidade.
 
-## 3. Problema mobilizador
+## 3. Problema central
 
 > Como projetar uma infraestrutura estadual que permita a estabelecimentos com sistemas heterogêneos compartilhar informações em saúde?
 
@@ -39,7 +42,7 @@ O problema reúne três jornadas clínicas complementares:
 2. Rastreamento do câncer do colo do útero, com requisição e laudo trocados com a API nativa do SISCAN por meio de um **Adaptador de Interoperabilidade FHIR-SISCAN**, que oferece uma fachada FHIR sobre esse contrato não FHIR.
 3. Interoperabilidade do ciclo do medicamento: os atos de prescrever, dispensar e administrar continuam sob responsabilidade dos prestadores de serviços de saúde; o trabalho projeta o serviço que permite trocar e correlacionar essas informações entre quem prescreve, quem dispensa e quem administra.
 
-As jornadas clínicas fornecem os eventos e os dados que justificam os serviços, mas as equipes não implementarão a atividade assistencial dos sistemas de origem. As jornadas compartilham capacidades transversais: identidade, autorização, auditoria, validação FHIR, terminologia, eventos, persistência, tratamento de falhas, apoio à decisão e avaliação da qualidade.
+As jornadas clínicas fornecem os eventos e os dados que justificam os serviços, mas a equipe não implementará a atividade assistencial dos sistemas de origem. As jornadas compartilham capacidades transversais: identidade, autorização, auditoria, validação FHIR, terminologia, eventos, persistência, tratamento de falhas, apoio à decisão e avaliação da qualidade.
 
 ## 4. Visão executiva do domínio
 
@@ -93,28 +96,29 @@ Esse encadeamento é a visão inicial. Versões, hashes, rotas, cardinalidades e
 
 ## 7. Roteiro de consulta do documento
 
-O documento não precisa ser estudado integralmente de forma linear:
+O documento não precisa ser lido integralmente de forma linear:
 
 | Momento | Seções recomendadas | Objetivo da leitura |
 | --- | --- | --- |
-| Orientação inicial | 1 a 4, depois 6 e 7 | Compreender problema, pessoas, fronteiras e componentes |
-| Preparação de um contrato | 5 | Consultar a linha de base brasileira apenas para o artefato em implementação |
-| Ordem de implementação | 8 | Compreender as dependências entre os quatro incrementos |
-| Implementação de uma capacidade | 9 a 12 | Consultar responsabilidades, contratos, estados, falhas e critérios do componente |
-| Execução da disciplina | 13 a 16 | Consultar carga horária, frentes, conteúdo provocado e incidentes |
-| Avaliação e governança | 17 a 22 | Produzir evidências, verificar aceitação, limites, riscos e decisões |
-| Referência externa | 23 | Localizar as fontes normativas e técnicas |
+| Orientação inicial | 1 a 4, depois 6 a 9 | Compreender problema, pessoas, fronteiras, componentes e forma de trabalho |
+| Preparação de um contrato | 5 e 10 | Consultar o glossário e a linha de base brasileira do artefato em questão |
+| Seleção de protótipos | 13 | Compreender as dependências entre os quatro incrementos de referência |
+| Projeto de uma capacidade | 11, 12 e 14 a 17 | Consultar responsabilidades, contratos, estados, falhas e critérios do componente |
+| Planejamento e execução | 18 a 21 | Consultar fases, frentes, problemas de design e incidentes |
+| Avaliação e governança | 22 a 27 | Produzir evidências, verificar aceitação, limites, riscos e decisões |
+| Referência externa | 28 | Localizar as fontes normativas e técnicas |
+| Sequência de trabalho | 29 | Organizar as ações para concluir a proposta e seus protótipos selecionados |
 
-As seções 9 a 12 estão agrupadas por capacidade para facilitar consulta; a ordem cronológica de implementação está na seção 8.
+As seções 12 e 14 a 17 estão agrupadas por capacidade. A seção 13 orienta as dependências de prototipagem; a seleção efetiva dos recortes é uma decisão conjunta.
 
-## 8. Premissas pedagógicas
+## 8. Princípios de trabalho
 
-1. **Necessidade antes do conteúdo:** um problema observável precede a exposição teórica que ajuda a resolvê-lo.
+1. **Problema antes da solução:** uma necessidade observável orienta a investigação, os critérios e a escolha da abordagem.
 2. **Alternativas antes da decisão:** decisões relevantes exigem pelo menos duas opções plausíveis, critérios e justificativa.
-3. **Design verificável:** diagramas e textos são acompanhados por contratos, exemplos executáveis, testes ou experimentos.
-4. **Incrementos verticais:** cada ciclo produz um fluxo funcional fim a fim, em vez de várias camadas incompletas.
-5. **Avaliação recorrente:** equipes revisam o design umas das outras e respondem a cenários de qualidade e incidentes.
-6. **Integração como contrato social:** equipes dependem de contratos comuns, mas preservam autonomia interna.
+3. **Design verificável:** a proposta define como verificar suas decisões; os recortes selecionados recebem contratos, exemplos executáveis, testes ou experimentos. O que ainda não foi verificado permanece explícito.
+4. **Protótipos verticais:** cada recorte escolhido exercita um fluxo e uma hipótese de design, em vez de acumular camadas incompletas.
+5. **Revisão recorrente:** integrantes revisam artefatos de outras frentes e respondem a cenários de qualidade e incidentes.
+6. **Decisões conjuntas:** as frentes distribuem o trabalho de uma única equipe; não possuem autonomia para fixar isoladamente tecnologias, contratos, arquitetura ou escopo.
 7. **Dados sintéticos:** nenhum dado pessoal ou clínico real é empregado.
 8. **Padrões versionados:** perfis, terminologias, regras CQL e contratos são fixados por versão durante cada incremento.
 
@@ -147,7 +151,7 @@ O [Registro de Atendimento Clínico (RAC)](https://portalservicos-datasus.saude.
 
 Os [artefatos técnicos publicados](https://servicos-datasus.saude.gov.br/detalhe/mvOq2Eteys) incluem o Modelo de Informação RAC, o Manual de Integração RAC RNDS v2.0 e exemplos JSON. Os exemplos são documentos FHIR R4 com `Bundle.type = document`, `Composition.type = RAC` e o perfil canônico `http://www.saude.gov.br/fhir/r4/StructureDefinition/BRRegistroAtendimentoClinico`. O RAC caracteriza o `Encounter`, o estabelecimento, os profissionais e o atendimento; pode incluir motivo, observações, problemas ou diagnósticos avaliados, alergias, procedimentos, prescrições, plano de cuidados, desfecho e atestado.
 
-Para reprodução durante a disciplina, os artefatos consultados devem ser arquivados sem atualização automática:
+Para reprodução no projeto, os artefatos consultados devem ser arquivados sem atualização automática:
 
 | Artefato RAC | SHA-256 verificado em 2 de agosto de 2026 |
 | --- | --- |
@@ -155,7 +159,7 @@ Para reprodução durante a disciplina, os artefatos consultados devem ser arqui
 | Exemplos JSON (`.zip`) | `79877266df9bf8ddef8e5bc410284fbe7d29badbdaa405e3b90c1c58c7c9e56f` |
 | Manual de Integração RAC RNDS v2.0 (`.docx`) | `0cc0b24ad750b3e63da9a0735fe1b13a0e936d12e96c205f53ee6e64b3bde46c` |
 
-O perfil exibido no projeto RNDS do Simplifier aparece como versão `2.1` e estado de rascunho (`draft`), e o próprio projeto informa que não é o repositório oficial para produção. Logo, a disciplina deve tratar o Portal de Serviços e os arquivos ali distribuídos como linha de base operacional; o Simplifier serve para navegação auxiliar, sem substituir a cópia versionada fixada.
+O perfil exibido no projeto RNDS do Simplifier aparece como versão `2.1` e estado de rascunho (`draft`), e o próprio projeto informa que não é o repositório oficial para produção. Logo, o projeto deve tratar o Portal de Serviços e os arquivos ali distribuídos como linha de base operacional; o Simplifier serve para navegação auxiliar, sem substituir a cópia versionada fixada.
 
 ### 10.3 IPS: síntese de múltiplas fontes
 
@@ -178,7 +182,7 @@ No levantamento realizado em 2 de agosto de 2026, foi localizada a seguinte cons
 
 Há uma ressalva relevante: embora o título e a página usem “Release 1”, o próprio guia informa que ainda não existe versão oficial corrente publicada; o manifesto contém `notForPublication: true`, e o [relatório de qualidade](https://hl7.org.br/fhir/ips/qa.html) declara que o guia de implementação (*Implementation Guide*, IG) nunca foi formalmente publicado. A URL canônica e seu histórico também não responderam com uma publicação acessível durante o levantamento. Portanto, `1.0.0 - STU1`, em que STU significa *Standard for Trial Use*, deve ser tratado como **cópia técnica versionada para trabalho**, não como norma nacional definitiva ou versão oficialmente publicada.
 
-Para a disciplina, a linha de base será exatamente `br.gov.saude.ips.fhir#1.0.0`, sem atualização automática para uma versão mais nova do IPS internacional. O repositório da disciplina deverá arquivar localmente o pacote obtido do espelho. O arquivo consultado em 2 de agosto de 2026 apresentou SHA-256 `cab3c2c2161eee496d8b71e50df55f793bd5967c9f874325344b60c37f198cee`. A execução não dependerá da disponibilidade do site durante o semestre.
+Para o projeto, a linha de base será exatamente `br.gov.saude.ips.fhir#1.0.0`, sem atualização automática para uma versão mais nova do IPS internacional. O repositório deverá arquivar localmente o pacote obtido do espelho. O arquivo consultado em 2 de agosto de 2026 apresentou SHA-256 `cab3c2c2161eee496d8b71e50df55f793bd5967c9f874325344b60c37f198cee`. A execução não dependerá da disponibilidade do site.
 
 Os perfis documentais que controlam a saída do Montador são `BundleBRIPS|1.0.0` e `CompositionBRIPS|1.0.0`. Perfis dos recursos componentes e terminologias devem vir do mesmo pacote e de suas dependências fixadas, evitando combinar silenciosamente artefatos de versões diferentes.
 
@@ -200,7 +204,7 @@ O próprio perfil `CompositionBRIPS` declara o mapeamento de `BRRegistroAtendime
 
 O sistema jamais deve trocar apenas `Composition.type`, reutilizar a autoria do RAC como se fosse autoria da síntese ou declarar equivalência entre os documentos. A montagem precisa selecionar, reconciliar e validar os fatos, preservar a proveniência de cada RAC e registrar separadamente a autoria e o instante de geração do IPS.
 
-Existe, contudo, uma **concorrência no nível da solução**, não dos modelos: uma interface pode consultar vários RACs e montar uma visão clínica dinâmica, em vez de materializar um IPS. A disciplina deverá comparar essas alternativas quanto a latência, disponibilidade, consistência temporal, seleção clínica, portabilidade, uso desconectado e auditabilidade. Uma visão dinâmica só poderá ser chamada de IPS se produzir e validar o documento conforme o perfil IPS; mostrar o último RAC ou concatenar RACs não satisfaz esse contrato.
+Existe, contudo, uma **concorrência no nível da solução**, não dos modelos: uma interface pode consultar vários RACs e montar uma visão clínica dinâmica, em vez de materializar um IPS. A equipe deverá comparar essas alternativas quanto a latência, disponibilidade, consistência temporal, seleção clínica, portabilidade, uso desconectado e auditabilidade. Uma visão dinâmica só poderá ser chamada de IPS se produzir e validar o documento conforme o perfil IPS; mostrar o último RAC ou concatenar RACs não satisfaz esse contrato.
 
 ### 10.5 Medicamentos
 
@@ -208,7 +212,7 @@ O Registro Eletrônico da Prescrição de Medicamentos (REPM) e o Registro Eletr
 
 Os modelos computacionais de ambos, contudo, podem ser obtidos na página operacional do REDFM. O download **Validador Local: Arquivos de Definições** distribui, dentro do mesmo ZIP, os pacotes `REPM.zip`, `REDFM.zip` e `REPM-REDFM.zip`. Portanto, a prescrição não deve ser procurada apenas como serviço independente no portal.
 
-| Artefato | Fonte oficial | Cópia da disciplina |
+| Artefato | Fonte oficial | Local previsto no repositório |
 | --- | --- | --- |
 | Página e documentação REDFM 1.0 | [Portal atual](https://portalservicos-datasus.saude.gov.br/servico/BBgfSNopOs) e [portal legado com anexos](https://servicos-datasus.saude.gov.br/detalhe/hFQ5SvwTgo) | [índice, proveniência e hashes](artefatos/rnds/medicamentos/README.md) |
 | Definições REDFM, incluindo os ZIPs internos REPM e REDFM | [download oficial](https://mobileapps-prd.saude.gov.br/portal-servicos/files/f3bd659c8c8ae3ee966e575fde27eb58/0d42fbc89a24de44c22c24eebb69e5d8_1s19mrtiw.zip) | [pacote integral](artefatos/rnds/medicamentos/redfm-definicoes-2026-02-06.zip), [REPM](artefatos/rnds/medicamentos/repm-perfis-internos.zip), [REDFM](artefatos/rnds/medicamentos/redfm-perfis-internos.zip) e [pacote combinado](artefatos/rnds/medicamentos/repm-redfm-perfis-internos.zip) |
@@ -216,11 +220,13 @@ Os modelos computacionais de ambos, contudo, podem ser obtidos na página operac
 | Manual de integração REDFM v1.0 | [PDF oficial](https://mobileapps-prd.saude.gov.br/portal-servicos/files/f3bd659c8c8ae3ee966e575fde27eb58/43c926450fee1204d264e8943cc8ade5_2zy7hchmh.pdf) | [cópia local](artefatos/rnds/medicamentos/manual-integracao-rnds-redfm-v1.0.pdf) |
 | Perfil de prescrição para navegação | [BRRegistroPrescricaoMedicamento no Simplifier](https://simplifier.net/RedeNacionaldeDadosemSaude/brregistroprescricaomedicamento) e [JSON direto](https://simplifier.net/RedeNacionaldeDadosemSaude/BRRegistroPrescricaoMedicamento/$download?format=json) | usar o pacote REPM local acima |
 
-Os perfis RNDS contidos nos pacotes REPM e REDFM estão marcados como `draft`, embora sejam distribuídos na página operacional do REDFM. O projeto RNDS no Simplifier também declara que não é repositório oficial para produção. Para a disciplina, essas cópias formam uma **linha de base técnica fixada**, não uma declaração de publicação formal, certificação ou conformidade nacional.
+Os caminhos locais da tabela indicam o destino previsto para o arquivamento. A presença e a integridade de cada arquivo precisam ser confirmadas no repositório antes do uso; uma referência neste documento não comprova que o artefato já foi incorporado.
 
-O repositório da disciplina deve conservar os downloads originais, os pacotes internos sem modificação e seus hashes. Atualizações só podem substituir essa linha de base após nova verificação e decisão registrada. Antes de redistribuir publicamente os binários fora do ambiente da disciplina, devem ser verificados os termos aplicáveis aos arquivos de origem.
+Os perfis RNDS contidos nos pacotes REPM e REDFM estão marcados como `draft`, embora sejam distribuídos na página operacional do REDFM. O projeto RNDS no Simplifier também declara que não é repositório oficial para produção. Para o projeto, essas cópias formam uma **linha de base técnica fixada**, não uma declaração de publicação formal, certificação ou conformidade nacional.
 
-Não foi identificado um modelo nacional da RNDS equivalente para administração de medicamentos. A disciplina poderá utilizar o recurso FHIR `MedicationAdministration` e um perfil educacional local explicitamente identificado, sem apresentá-lo como padrão brasileiro oficial.
+O repositório deve conservar os downloads originais, os pacotes internos sem modificação e seus hashes. Atualizações só podem substituir essa linha de base após nova verificação e decisão registrada. Antes de redistribuir publicamente os binários, devem ser verificados os termos aplicáveis aos arquivos de origem.
+
+Não foi identificado um modelo nacional da RNDS equivalente para administração de medicamentos. O projeto poderá utilizar o recurso FHIR `MedicationAdministration` e um perfil local de protótipo explicitamente identificado, sem apresentá-lo como padrão brasileiro oficial.
 
 Prescrição, dispensação e administração são atos realizados por profissionais habilitados no contexto de prestadores de serviços de saúde. Esses atos, suas regras assistenciais e as interfaces internas dos prestadores estão fora do objeto de implementação. Os sistemas clientes apenas simulam sua ocorrência e publicam os registros FHIR correspondentes.
 
@@ -244,14 +250,16 @@ O sistema de interesse é uma instância estadual da **Plataforma de Interoperab
 
 ## 12. Visão de contêineres C4
 
-Alguns contêineres no nível correspondente do C4 Model.
+A visão inicial de contêineres C4 abaixo orienta a discussão de fronteiras e responsabilidades. Seu detalhamento e as alternativas de distribuição são decididos em conjunto e registrados em ADR. Ela não exige implementar todos os contêineres nos protótipos selecionados.
+
+O servidor FHIR e o mecanismo de validação serão baseados em HAPI FHIR. Java e Spring Boot constituem a plataforma básica de desenvolvimento; versões, configuração e implantação ainda precisam ser fixadas conforme a seção 27.
 
 | Elemento | Classificação C4 | Responsabilidade | Dados duráveis próprios |
 | --- | --- | --- | --- |
 | Aplicação Clínica / PEP simulado | Sistema de software externo | Produzir ou consumir FHIR e acionar CDS Hooks | Apenas dados sintéticos do estabelecimento |
 | Gateway de Integração | Contêiner | Autenticar clientes e plataformas estaduais pares, aplicar limites, encaminhar chamadas e correlacionar requisições locais e interestaduais | Configuração e metadados operacionais |
-| Servidor FHIR R4 | Contêiner | Manter o estado clínico sintético compartilhado e oferecer busca, histórico e operações | Recursos FHIR sintéticos |
-| Serviço de Validação e Terminologia | Contêiner | Validar recursos contra pacotes versionados e resolver terminologias controladas | Pacotes, índices e memórias temporárias (`caches`) sem dados clínicos |
+| Servidor FHIR R4 | Contêiner | Usar HAPI FHIR para manter o estado clínico sintético compartilhado e oferecer busca, histórico e operações | Recursos FHIR sintéticos |
+| Serviço de Validação e Terminologia | Contêiner | Usar o validador HAPI FHIR com pacotes versionados e resolver terminologias controladas | Pacotes, índices e memórias temporárias (`caches`) sem dados clínicos |
 | Serviço de Validação de Assinaturas Digitais | Contêiner | Verificar assinaturas de documentos e mensagens segundo políticas criptográficas e âncoras de confiança versionadas | Políticas, certificados públicos, âncoras de confiança e dados de revogação; nenhum documento clínico ou chave privada |
 | Serviço de Documentos RNDS | Contêiner | Validar e publicar os tipos documentais suportados, reconciliar identificadores locais e RNDS e controlar consulta, substituição e exclusão | Metadados de correlação, idempotência e estado de integração; documentos permanecem nas origens e na RNDS simulada |
 | Montador Efêmero de IPS | Contêiner | Receber fatos selecionados, validar progressivamente e produzir um novo documento IPS | Nenhum dado clínico após o prazo da sessão |
@@ -267,7 +275,7 @@ Alguns contêineres no nível correspondente do C4 Model.
 | Coletor de Telemetria | Contêiner | Receber e processar métricas, logs técnicos e rastros distribuídos | Somente buffers operacionais temporários |
 | Repositório de Telemetria | Contêiner de dados | Manter dados operacionais segundo política de retenção própria | Métricas, logs técnicos e rastros sem conteúdo clínico integral |
 | Plataforma estadual de outra UF | Sistema de software externo | Trocar dados diretamente com a plataforma em foco por contrato federado entre pares | Dados clínicos sintéticos sob governança da UF participante |
-| API SISCAN simulada | Sistema de software externo | Emular o recorte oficial de autenticação, escrita, consulta, processamento e retorno assíncrono fixado para a disciplina | Dados sintéticos de requisições, laudos e processamento |
+| API SISCAN simulada | Sistema de software externo | Emular o recorte oficial de autenticação, escrita, consulta, processamento e retorno assíncrono fixado para o protótipo | Dados sintéticos de requisições, laudos e processamento |
 | RNDS simulada | Sistema de software externo | Representar a fonte e o destino nacionais de dados e seus contratos, sem intermediar a troca entre plataformas estaduais | Documentos e registros sintéticos de integração |
 
 ### 12.1 Fronteira entre o Serviço de Documentos RNDS e o Montador IPS
@@ -278,7 +286,7 @@ O **Montador Efêmero de IPS** opera depois e com outra finalidade: recebe fatos
 
 ### 12.2 Contrato mínimo do Serviço de Documentos RNDS
 
-O serviço oferece uma fachada educacional estável sobre a RNDS simulada. Essas operações não pretendem reproduzir URLs oficiais da RNDS:
+O serviço oferece uma fachada estável definida pelo projeto sobre a RNDS simulada. Essas operações não pretendem reproduzir URLs oficiais da RNDS:
 
 | Operação | Finalidade | Resultado principal |
 | --- | --- | --- |
@@ -316,9 +324,11 @@ O resultado é `valid`, `invalid` ou `indeterminate`. Indisponibilidade da fonte
 
 O componente valida assinaturas; não assina documentos, não mantém chaves privadas, não emite certificados e não decide se o conteúdo é clinicamente verdadeiro. Autenticação mútua no transporte também não substitui assinatura do conteúdo. Validação FHIR, autorização de acesso, correspondência entre o papel profissional e a operação pretendida, `Provenance` e `AuditEvent` permanecem responsabilidades distintas.
 
-## 13. Ordem de implementação em quatro incrementos
+## 13. Incrementos de prototipagem
 
-Os quatro incrementos de dez horas seguem dependências crescentes. Segurança da informação, segurança clínica, auditoria, observabilidade e testes de contrato atravessam todos eles.
+Os quatro incrementos abaixo são referências para selecionar protótipos e compreender suas dependências, não um compromisso de implementação integral. A equipe decide em conjunto quais recortes construir, qual hipótese cada um verifica, quais simuladores são necessários e quais critérios de aceitação serão exercitados. Esforço e prazos são definidos por marco, sem duração fixa por incremento.
+
+Segurança da informação, segurança clínica, auditoria, observabilidade e testes de contrato atravessam os recortes implementados. A seleção não permite declarar conformidade com operações ausentes nem relaxar as restrições de dados sintéticos, identidade, autorização ou validade documental.
 
 | Incremento | Fluxo executável | Novos problemas de design |
 | --- | --- | --- |
@@ -327,7 +337,7 @@ Os quatro incrementos de dez horas seguem dependências crescentes. Segurança d
 | 3. Trocar registros de medicamentos | Prestadores simulados publicam prescrição, dispensação parcial e administração; o serviço correlaciona os registros sem confundir os atos | consistência distribuída, identidade, proveniência, autorização e reconciliação |
 | 4. Produzir, trocar e usar um IPS | A aplicação seleciona fatos de pelo menos dois RACs, do laudo e de medicamentos e resolve conflitos clínicos; o Montador produz um IPS válido; a plataforma o envia diretamente a uma plataforma estadual par; CQL calcula um indicador e CDS Hooks usa os dados integrados no cenário controlado | agregação, conflito, retenção efêmera, federação, materialização, qualidade dos dados e explicabilidade |
 
-Ao final, a plataforma estadual de origem envia o IPS diretamente à plataforma de outra UF pelo contrato federado entre pares, e um sistema cliente da UF destinatária o consulta por sua própria plataforma. Em fluxo independente, cada plataforma pode usar o Serviço de Documentos RNDS para publicar ou consultar dados nacionais. A equipe compara a materialização do IPS com uma visão dinâmica construída sobre os mesmos RACs e registra a decisão em ADR.
+No cenário integrado de referência, a plataforma estadual de origem envia o IPS diretamente à plataforma de outra UF pelo contrato federado entre pares, e um sistema cliente da UF destinatária o consulta por sua própria plataforma. Em fluxo independente, cada plataforma pode usar o Serviço de Documentos RNDS para publicar ou consultar dados nacionais. A proposta compara a materialização do IPS com uma visão dinâmica sobre os mesmos RACs e registra a decisão em ADR; o experimento correspondente integra a seleção de protótipos quando necessário para verificar essa decisão.
 
 ## 14. Jornada RAC → IPS pelo Montador Efêmero
 
@@ -382,7 +392,7 @@ Uma sessão aceita recursos FHIR em `application/fhir+json`, individualmente, em
 - `Organization`, `Practitioner` e `PractitionerRole` necessários às referências;
 - `Provenance`, quando fornecida pela origem.
 
-A lista definitiva, cardinalidades e perfis aceitos serão derivados do pacote versionado do IPS Brasil adotado no semestre. A `Composition` e o `Bundle` final são gerados pelo montador, mas sua autoridade clínica é declarada pelo sistema cliente.
+A lista definitiva, cardinalidades e perfis aceitos serão derivados do pacote versionado do IPS Brasil adotado no projeto. A `Composition` e o `Bundle` final são gerados pelo montador, mas sua autoridade clínica é declarada pelo sistema cliente.
 
 Na criação da sessão, o cliente fixa metadados imutáveis de autoridade: organização responsável, autor da `Composition`, atestador e custodiante quando aplicáveis ao perfil, finalidade da síntese e versão da política de seleção. O Montador é registrado somente como agente de software em `Provenance`; ele não assume autoria, atestação ou custódia clínica.
 
@@ -432,7 +442,7 @@ O primeiro recurso do `Bundle` final deve ser a `Composition`. Todas as referên
 | `GET /ips-assemblies/{id}/document` | Reobter idempotentemente o resultado antes da expiração | Mesmo `Bundle` e mesmo hash |
 | `DELETE /ips-assemblies/{id}` | Cancelar e eliminar antecipadamente a sessão | Confirmação sem conteúdo clínico |
 
-Essas URLs representam um contrato educacional, não uma operação oficial do padrão FHIR. Uma decisão de design deverá comparar esse contrato de sessão com uma operação única que recebe todo o conteúdo de uma vez.
+Essas URLs representam um contrato próprio do projeto, não uma operação oficial do padrão FHIR. Uma decisão de design deverá comparar esse contrato de sessão com uma operação única que recebe todo o conteúdo de uma vez.
 
 Toda mutação após a criação exige `If-Match` com a versão corrente da sessão e uma chave de idempotência. Versão desatualizada produz `412 Precondition Failed`; operação incompatível com o estado ou reutilização da mesma chave com corpo diferente produz `409 Conflict`; sessão expirada produz `410 Gone`. Uma nova solicitação de `$finalize` é aceita somente no estado `Pronta`.
 
@@ -559,13 +569,13 @@ O contêiner precisa tratar submissões simultâneas e repetidas:
 
 ### 15.1 Contrato nativo que o simulador deve emular
 
-O simulador é acessado exclusivamente pelo adaptador e reproduz o contrato externo publicado pelo DATASUS. A fonte de verdade contratual será uma cópia versionada, arquivada no início da oferta, do Manual de integração v3.0 e das especificações OpenAPI de homologação da [API de escrita](https://siscan-api-hom.saude.gov.br/api#/) e da [API de consulta](https://siscan-consulta-api-hom.saude.gov.br/api#/). A versão do manual e a versão `1.0` anunciada pelos documentos OAS não devem ser confundidas.
+O simulador é acessado exclusivamente pelo adaptador e reproduz o contrato externo publicado pelo DATASUS no recorte declarado. A fonte de verdade contratual será uma cópia versionada, arquivada antes da implementação do recorte, do Manual de integração v3.0 e das especificações OpenAPI de homologação da [API de escrita](https://siscan-api-hom.saude.gov.br/api#/) e da [API de consulta](https://siscan-consulta-api-hom.saude.gov.br/api#/). A versão do manual e a versão `1.0` anunciada pelos documentos OAS não devem ser confundidas.
 
-O SISCAN nacional também cobre mama e mamografia. Como a jornada da disciplina trata câncer do colo do útero, o recorte educacional mínimo deve implementar de forma compatível as seguintes operações oficiais:
+O SISCAN nacional também cobre mama e mamografia. Como a jornada do projeto trata câncer do colo do útero, o contrato de referência contempla as operações oficiais abaixo. Cada protótipo declara o subconjunto que emula de forma compatível e as operações ainda não implementadas, conforme a seleção da seção 13.
 
-| Superfície | Operações mínimas compatíveis |
+| Superfície | Operações do contrato de referência |
 | --- | --- |
-| Autenticação simulada | equivalente local de `POST /realms/portal-servicos/protocol/openid-connect/token`, com `application/x-www-form-urlencoded`, `grant_type=client_credentials` e emissão de JWT educacional |
+| Autenticação simulada | equivalente local de `POST /realms/portal-servicos/protocol/openid-connect/token`, com `application/x-www-form-urlencoded`, `grant_type=client_credentials` e emissão de JWT exclusivo de teste |
 | Requisições citopatológicas | `POST /api/v1/requisicao-exame/citopatologico-colo-utero` e `PUT`/`DELETE /api/v1/requisicao-exame/citopatologico-colo-utero/{protocolo}` |
 | Requisições histopatológicas | `POST /api/v1/requisicao-exame/histopatologico-colo-utero` e `PUT`/`DELETE /api/v1/requisicao-exame/histopatologico-colo-utero/{protocolo}` |
 | Resultados citopatológicos | `POST /api/v1/resultado-exame/citopatologico-colo-utero` e `PUT`/`DELETE /api/v1/resultado-exame/citopatologico-colo-utero/{protocolo}` |
@@ -575,15 +585,15 @@ O SISCAN nacional também cobre mama e mamografia. Como a jornada da disciplina 
 
 O simulador deve preservar nomes, tipos, obrigatoriedade e cardinalidade dos DTOs definidos nas especificações copiadas; exigir `Authorization: Bearer <token>`; e reproduzir os códigos HTTP declarados por operação. Em uma criação aceita, a resposta `201` segue `ResponseCreatedRequisicaoDto`, com `success`, `message`, `codigoProcesso` e `data`. A consulta de processamento representa `statusProcesso` como `1` (processando), `2` (processado com sucesso) ou `3` (processado com erro), retornando o protocolo ou a descrição do erro conforme o desfecho.
 
-As requisições de colo do útero admitem `callBackUrl` opcional. Quando informado, o simulador deve executar o retorno assíncrono (*callback*) do processamento para uma URL HTTPS educacional e permitir testar atraso, duplicidade e indisponibilidade. A consulta periódica por `codigoProcesso` permanece disponível para reconciliação. Segredos e tokens são exclusivamente sintéticos e nunca aparecem em logs.
+As requisições de colo do útero admitem `callBackUrl` opcional. Quando informado, o simulador deve executar o retorno assíncrono (*callback*) do processamento para uma URL HTTPS do ambiente de teste e permitir testar atraso, duplicidade e indisponibilidade. A consulta periódica por `codigoProcesso` permanece disponível para reconciliação. Segredos e tokens são exclusivamente sintéticos e nunca aparecem em logs.
 
-As especificações OpenAPI não enumeram todos os códigos citados no manual: este também documenta `404` e `422`, enquanto as operações publicadas declaram principalmente `400`, `401`, `403` e `500`, além dos códigos de sucesso. A turma deve registrar essa divergência, fixar o comportamento na cópia contratual versionada e cobri-lo com testes; não deve harmonizar silenciosamente as fontes.
+As especificações OpenAPI não enumeram todos os códigos citados no manual: este também documenta `404` e `422`, enquanto as operações publicadas declaram principalmente `400`, `401`, `403` e `500`, além dos códigos de sucesso. A equipe deve registrar essa divergência, fixar o comportamento na cópia contratual versionada e cobri-lo com testes; não deve harmonizar silenciosamente as fontes.
 
 Não é obrigatório implementar mama e mamografia no núcleo. Se forem acrescentadas, devem usar as rotas e os DTOs oficiais correspondentes. O simulador não pode anunciar conformidade com operações que não implementa.
 
 ### 15.2 Contrato consumidor da fachada FHIR-SISCAN
 
-Os sistemas clientes acessam o adaptador exclusivamente pelo Gateway. As URLs abaixo são um contrato educacional da plataforma, não operações oficiais do padrão FHIR nem da API SISCAN:
+Os sistemas clientes acessam o adaptador exclusivamente pelo Gateway. As URLs abaixo são um contrato próprio da plataforma, não operações oficiais do padrão FHIR nem da API SISCAN:
 
 | Operação | Entrada ou saída FHIR | Semântica |
 | --- | --- | --- |
@@ -602,7 +612,7 @@ Erros da fachada são representados por `OperationOutcome`: `400` para envelope 
 ### 15.3 Fluxo mínimo
 
 1. A unidade cria um `ServiceRequest` para exame de rastreamento ou investigação.
-2. O Gateway autentica o sistema cliente, e o adaptador obtém ou reutiliza um token educacional válido para a API SISCAN simulada.
+2. O Gateway autentica o sistema cliente, e o adaptador obtém ou reutiliza um token de teste válido para a API SISCAN simulada.
 3. O adaptador valida o FHIR e, já autenticado, consulta estabelecimento, profissional e vínculos.
 4. O adaptador converte a solicitação para o DTO oficial e faz `POST` na rota nativa do tipo de exame.
 5. O simulador devolve `codigoProcesso`; o adaptador acompanha o processamento técnico por consulta periódica ou retorno assíncrono.
@@ -711,7 +721,7 @@ O fluxo deve manter estados clinicamente diferentes:
 
 O serviço e o IPS não devem converter automaticamente “dispensado” em “em uso” nem “prescrito” em “administrado”. A seção de medicamentos é uma síntese cuja política precisa ser explícita, versionada e testada.
 
-Os modelos educacionais devem se alinhar ao REPM, REDFM e à Ontologia Brasileira de Medicamentos na versão fornecida pelo docente. Administração será identificada como perfil educacional local enquanto não houver perfil nacional aplicável.
+Os modelos usados nos protótipos devem se alinhar ao REPM, REDFM e à Ontologia Brasileira de Medicamentos na versão fixada pela equipe. Administração será identificada como perfil local de protótipo enquanto não houver perfil nacional aplicável.
 
 ### 16.4 Critérios de aceitação do serviço
 
@@ -741,7 +751,7 @@ Laudo, prescrição, dispensação e administração são detectados a partir de
 
 O evento possui identificador determinístico derivado da sessão e da versão final, versão do esquema, tipo, organização emissora, audiência autorizada, instante, expiração e identificador opaco da montagem. Ele não transporta conteúdo clínico. Repetir `$finalize` produz o mesmo documento e o mesmo identificador de evento; consumidores deduplicam pelo identificador. A caixa de saída preserva eventos não confirmados até a entrega ou a expiração da montagem.
 
-Como a base é FHIR R4, as equipes devem comparar a assinatura definida por consulta no R4 com o modelo baseado em tópicos do Subscriptions R5 Backport. A entrega deve prever duplicidade, retentativas, autenticação do endpoint receptor (*webhook*), expiração, fila de mensagens não entregues e reconciliação por consulta ou histórico.
+Como a base é FHIR R4, a equipe deve comparar a assinatura definida por consulta no R4 com o modelo baseado em tópicos do Subscriptions R5 Backport. A entrega deve prever duplicidade, retentativas, autenticação do endpoint receptor (*webhook*), expiração, fila de mensagens não entregues e reconciliação por consulta ou histórico.
 
 Uma notificação indica que algo mudou; ela não substitui a consulta autorizada à fonte nem oferece garantia de processamento exatamente uma vez.
 
@@ -773,25 +783,24 @@ Cobertura populacional e seguimento são extensões, pois exigem denominadores e
 
 Uma mesma biblioteca CQL pode apoiar medida e CDS apenas quando contexto, população, instante de avaliação e semântica forem realmente equivalentes. Reuso não deve ocultar diferenças entre avaliar uma população e orientar uma pessoa durante um atendimento.
 
-## 18. Percurso de 128 horas
+## 18. Fases e marcos de trabalho
 
-| Fase | Horas | Problema e atividades | Evidências principais |
-| --- | ---: | --- | --- |
-| Imersão no domínio | 8 | Compreender jornadas, atores, restrições e diferenças entre os registros clínicos | Mapa de partes interessadas, glossário e narrativas |
-| Problema e requisitos significativos | 16 | Identificar fronteiras, ASRs, riscos, LGPD, disponibilidade e conectividade | Cenários de qualidade e matriz de rastreabilidade |
-| Arquiteturas candidatas | 16 | Comparar centralização, federação, comunicação síncrona/assíncrona e persistência | C4, alternativas, avaliação e ADRs |
-| Contratos e modelos | 16 | Definir perfis, estados, APIs, eventos, erros, identidade e terminologia | OpenAPI/FHIR, diagramas de sequência e estados |
-| Quatro incrementos integrados | 40 | Implementar fatias verticais e integrar equipes em ciclos de 10 horas | Protótipos executáveis, testes e demonstrações |
-| Incidentes e avaliação | 16 | Injetar falhas, revisar segurança da informação, segurança clínica, desempenho, usabilidade e modificabilidade | Relatórios de experimento e revisão cruzada |
-| Integração final | 8 | Executar jornadas completas e corrigir incompatibilidades | Testes de contrato e evidências fim a fim |
-| Defesa e retrospectiva | 8 | Justificar decisões, limites e evolução proposta | Apresentação, documentação final e retrospectiva |
-| **Total** | **128** |  |  |
+| Fase | Trabalho | Marco de saída |
+| --- | --- | --- |
+| Contexto e domínio | Compreender jornadas, atores, restrições e diferenças entre os registros clínicos | Escopo, mapa de partes interessadas, glossário e narrativas |
+| Requisitos significativos | Identificar fronteiras, ASRs, riscos, LGPD, disponibilidade e conectividade | Cenários mensuráveis de qualidade e matriz de rastreabilidade |
+| Arquiteturas candidatas | Comparar distribuição de responsabilidades, comunicação e persistência | Contexto e contêineres C4, alternativas e ADRs discutidos em conjunto |
+| Contratos e modelos | Definir interfaces, perfis, estados, eventos, erros, identidade e terminologia no nível necessário à proposta | Contratos de referência, diagramas de sequência e estados |
+| Seleção dos protótipos | Priorizar incertezas e escolher recortes e simuladores pela contribuição à decisão | Hipóteses, limites, critérios, responsáveis e plano de verificação |
+| Prototipagem | Construir os recortes escolhidos com Java, Spring Boot, HAPI FHIR e simuladores da equipe | Protótipos executáveis e evidências das hipóteses selecionadas |
+| Incidentes e avaliação | Injetar falhas e avaliar propriedades relevantes dos recortes | Relatórios de experimento, revisão cruzada e riscos residuais |
+| Consolidação da proposta | Integrar decisões, contratos, evidências e limitações | Proposta de arquitetura de alto nível revisada e retrospectiva |
 
-Exposição conceitual, oficinas, revisão e implementação ocorrem dentro de todas as fases. A tabela não separa artificialmente “teoria” e “prática”.
+Não há carga de horas fixa nem duração predeterminada para os incrementos. Prioridade, esforço, prazos e critérios de conclusão de cada marco serão definidos e revistos em conjunto, considerando a capacidade dos oito integrantes e as dependências entre frentes.
 
 ## 19. Frentes de equipe
 
-As frentes abaixo atribuem responsabilidade técnica por capacidades, sem criar equipes isoladas permanentes:
+O trabalho pertence a uma única equipe de oito integrantes, coordenada pelo responsável pelo repositório. As frentes abaixo distribuem responsabilidade técnica por capacidades; não são equipes autônomas nem determinam uma pessoa exclusiva por frente:
 
 1. Gateway de Integração, contratos FHIR, identidade e terminologia;
 2. adaptador de interoperabilidade FHIR-SISCAN e simulador contratual da API SISCAN;
@@ -802,9 +811,9 @@ As frentes abaixo atribuem responsabilidade técnica por capacidades, sem criar 
 7. Serviço de Interoperabilidade de Medicamentos e reconciliação;
 8. segurança da informação, segurança clínica, auditoria e observabilidade, como responsabilidades transversais.
 
-O número de frentes simultâneas deve ser adaptado ao tamanho da turma. Em turmas menores, CQL e CDS podem formar uma frente; Subscription pode ser incorporada ao servidor FHIR; medicamentos podem ser o segundo incremento de uma equipe.
+A atribuição de responsáveis, a combinação de frentes e a ordem de execução serão decididas em conjunto. Cada responsável prepara alternativas, explicita dependências e acompanha a execução das decisões acordadas; não fixa unilateralmente arquitetura, tecnologia, contratos ou escopo.
 
-Cada frente precisa oferecer:
+Todas as frentes contribuem para a proposta de alto nível. Para cada recorte selecionado para prototipagem, a frente responsável oferece:
 
 - contrato versionado;
 - exemplos válidos e inválidos;
@@ -812,11 +821,11 @@ Cada frente precisa oferecer:
 - testes de contrato;
 - indicadores operacionais;
 - política de erros e compatibilidade;
-- responsável por acompanhar ao menos uma equipe consumidora.
+- responsável por acompanhar as frentes consumidoras do contrato.
 
-## 20. Conteúdo provocado por necessidades
+## 20. Problemas de design e técnicas de análise
 
-| Situação introduzida | Conteúdo de Design de Software |
+| Situação | Técnicas e conceitos de Design de Software |
 | --- | --- |
 | Novo estabelecimento precisa integrar-se | abstração, interfaces, componentes, contratos e interoperabilidade |
 | API SISCAN usa DTOs próprios, separa escrita e consulta e processa de forma assíncrona | adaptador, fachada, camada anticorrupção, testes de contrato, consulta periódica, retorno assíncrono e evolução de APIs |
@@ -834,11 +843,11 @@ Cada frente precisa oferecer:
 | Endpoint receptor recebe a mesma notificação duas vezes | entrega ao menos uma vez, idempotência e observabilidade |
 | Medicamento foi prescrito, mas não dispensado | modelagem de domínio, estados e semântica clínica |
 | Auditor questiona quem acessou o dado | autenticação, autorização, LGPD, `AuditEvent`, rastreabilidade e responsabilização |
-| Equipes discordam sobre uma tecnologia | geração de alternativas, critérios, prototipagem e ADR |
+| Integrantes divergem sobre uma tecnologia | geração de alternativas, critérios, prototipagem, decisão conjunta e ADR |
 
-## 21. Incidentes pedagógicos
+## 21. Incidentes para validação
 
-O docente introduz mudanças sem anunciar previamente qual conteúdo será necessário:
+A equipe seleciona incidentes conforme os riscos e as hipóteses dos protótipos. O catálogo de referência inclui:
 
 1. O laboratório fica indisponível após receber a amostra.
 2. O mesmo `ServiceRequest` chega três vezes após tempo limite no sistema cliente.
@@ -854,9 +863,11 @@ O docente introduz mudanças sem anunciar previamente qual conteúdo será neces
 12. Um log operacional contém acidentalmente um identificador clínico.
 13. Um RAC usado como fonte é substituído depois que o IPS já foi finalizado.
 
-Cada incidente exige diagnóstico, alternativas, decisão registrada, alteração mínima e nova evidência de verificação.
+Cada incidente executado exige diagnóstico, alternativas, decisão registrada, alteração mínima e nova evidência de verificação. Incidentes não exercitados permanecem identificados como verificação pendente, não como propriedades demonstradas.
 
-## 22. Artefatos obrigatórios
+## 22. Artefatos da proposta e dos protótipos
+
+A proposta de alto nível deve conter:
 
 - descrição do problema, escopo e partes interessadas;
 - requisitos funcionais e cenários mensuráveis de qualidade;
@@ -864,37 +875,41 @@ Cada incidente exige diagnóstico, alternativas, decisão registrada, alteraçã
 - pelo menos uma alternativa arquitetural rejeitada com justificativa;
 - ADRs das decisões significativas;
 - modelo de domínio e glossário;
-- contratos FHIR, CDS Hooks, Subscription e APIs próprias;
-- cópia versionada do modelo, manual e exemplos RAC, testes de contrato do Serviço de Documentos RNDS e matriz RAC → IPS com regras de seleção e proveniência;
-- ADR e experimento comparando visão dinâmica sobre RACs com IPS materializado;
-- cópia versionada dos contratos OAS da API SISCAN e matriz de mapeamento FHIR ↔ DTO nativo;
-- diagramas de sequência dos fluxos principais e de falha;
-- máquinas de estado do SISCAN, da publicação de documentos RNDS e da montagem de IPS;
+- visão dos contratos FHIR, CDS Hooks, Subscription e APIs próprias, com fronteiras e dependências explícitas;
+- diagramas de sequência dos fluxos principais e de falha e estados relevantes das integrações;
+- comparação entre visão dinâmica sobre RACs e IPS materializado, com decisão e limitações;
 - modelo de ameaças e política de minimização de dados;
-- análise de perigos clínicos, mitigações e evidências para SISCAN, RAC/IPS, medicamentos e CDS, separada do modelo de ameaças de segurança da informação;
+- análise de perigos clínicos, mitigações e riscos residuais para SISCAN, RAC/IPS, medicamentos e CDS, separada do modelo de ameaças;
 - estratégia de persistência, concorrência e tratamento de erros;
-- protótipos e testes de contrato;
-- experimentos de atributos de qualidade;
-- matriz requisito → elemento de design → teste → evidência;
+- seleção justificada dos protótipos, simuladores e hipóteses a verificar;
+- matriz requisito → elemento de design → verificação prevista → evidência e estado da verificação;
 - relatório de revisão cruzada;
 - retrospectiva das decisões que mudaram e por quê.
 
-## 23. Avaliação
+Para os recortes selecionados, acrescentam-se contratos detalhados e versionados, simuladores, exemplos válidos e inválidos, testes de contrato e experimentos de atributos de qualidade. Os artefatos externos necessários devem ser arquivados com origem, versão, hash e termos de uso verificados.
 
-A avaliação prioriza qualidade das decisões e evidências, não quantidade de código.
+Conforme o recorte, isso inclui a matriz RAC → IPS com regras de seleção e proveniência, os testes do Serviço de Documentos RNDS, a cópia dos contratos OAS do SISCAN e a matriz FHIR ↔ DTO nativo, além dos resultados dos experimentos. Um artefato planejado não deve ser apresentado como existente ou executado.
 
-| Dimensão | Peso sugerido |
-| --- | ---: |
-| Compreensão do problema, partes interessadas e requisitos de qualidade | 15% |
-| Alternativas, decisões, princípios e coerência arquitetural | 25% |
-| Contratos, modelos, notações e rastreabilidade | 20% |
-| Protótipo integrado e correção dos fluxos | 20% |
-| Verificação, segurança da informação, segurança clínica, resiliência e avaliação de qualidade | 15% |
-| Comunicação técnica, revisão e contribuição individual | 5% |
+## 23. Revisão da proposta
 
-A nota de equipe deve ser combinada com defesa individual de decisões e leitura de artefatos produzidos por outra frente.
+A revisão prioriza qualidade das decisões e evidências, não quantidade de código. Os critérios abaixo orientam a discussão e a aceitação conjunta da proposta.
 
-## 24. Critérios de aceitação do trabalho integrado
+| Dimensão | Pergunta de revisão |
+| --- | --- |
+| Problema, partes interessadas e requisitos | O escopo está delimitado e os cenários de qualidade são verificáveis? |
+| Alternativas e coerência arquitetural | As opções, os critérios, as consequências e a decisão conjunta estão registrados? |
+| Contratos, modelos e rastreabilidade | Responsabilidades, estados, dependências e compatibilidade são compreensíveis e rastreáveis? |
+| Protótipos selecionados | Cada recorte responde à hipótese prevista com evidência reproduzível e limitações explícitas? |
+| Qualidade e riscos | Segurança da informação, segurança clínica, privacidade e resiliência possuem análise e verificação proporcionais ao recorte? |
+| Colaboração e comunicação | As frentes revisaram os artefatos, compartilharam decisões e deixaram responsabilidades e pendências claras? |
+
+A revisão é conduzida pela equipe sob coordenação do responsável pelo repositório. A autoria dos artefatos e a responsabilidade técnica permanecem explícitas, mas a aceitação de decisões de projeto não é unilateral.
+
+## 24. Critérios de referência e aceitação da proposta
+
+As seções 24.1 a 24.4 descrevem o cenário integrado de referência. Na seleção dos protótipos, a equipe identifica os critérios aplicáveis a cada recorte e distingue o que foi projetado, implementado, verificado ou ficou fora da seleção. Não é necessário executar todo o catálogo para concluir a proposta de alto nível.
+
+Essa delimitação não dispensa invariantes de segurança, identidade, privacidade ou validade dos artefatos efetivamente produzidos. Em particular, uma saída só pode ser chamada de IPS quando validada contra o perfil fixado, e um simulador não pode anunciar suporte a operações ausentes. A aceitação da proposta segue a seção 24.5.
 
 ### 24.1 Integração SISCAN
 
@@ -906,14 +921,14 @@ A nota de equipe deve ser combinada com defesa individual de decisões e leitura
 ### 24.2 RAC, IPS, RNDS e troca interestadual
 
 1. Um PEP produz RAC sintético válido, e o Serviço de Documentos RNDS o publica e reconcilia identificadores local e RNDS sem assumir autoria clínica.
-2. Consulta, substituição e exclusão seguem o contrato e os controles de autorização definidos na seção 7.4.
-3. O sistema cliente seleciona fatos de pelo menos dois RACs, um laudo final e um registro de medicamento; o Montador satisfaz os critérios da seção 9.12, cria nova `CompositionBRIPS` e preserva a proveniência sem renomear ou concatenar documentos-fonte.
+2. Consulta, substituição e exclusão seguem o contrato e os controles de autorização definidos na seção 12.2.
+3. O sistema cliente seleciona fatos de pelo menos dois RACs, um laudo final e um registro de medicamento; o Montador satisfaz os critérios da seção 14.12, cria nova `CompositionBRIPS` e preserva a proveniência sem renomear ou concatenar documentos-fonte.
 4. A plataforma de origem entrega o IPS final diretamente a uma plataforma estadual de outra UF, e o sistema cliente destinatário o consulta por sua plataforma local; nenhuma etapa desse intercâmbio usa a RNDS como intermediária.
 5. A comparação entre visão dinâmica sobre RACs e IPS materializado possui critérios, experimento e ADR; nenhuma saída é chamada de IPS sem validação contra o perfil fixado.
 
 ### 24.3 Medicamentos, medidas e apoio à decisão
 
-1. O Serviço de Interoperabilidade de Medicamentos satisfaz os critérios da seção 11.4 e mantém prescrição, dispensação e administração semanticamente distintas.
+1. O Serviço de Interoperabilidade de Medicamentos satisfaz os critérios da seção 16.4 e mantém prescrição, dispensação e administração semanticamente distintas.
 2. Pelo menos um indicador oficial é executado como medida CQL sobre dados sintéticos, com resultado reproduzível.
 3. Pelo menos um CDS Service oferece recomendação contextual, versionada e justificável; resposta tardia, indisponibilidade ou dados incompletos não bloqueiam o atendimento nem apresentam recomendação potencialmente insegura como conclusiva.
 
@@ -924,10 +939,20 @@ A nota de equipe deve ser combinada com defesa individual de decisões e leitura
 3. Perigos clínicos identificados nas jornadas SISCAN, RAC/IPS, medicamentos e CDS possuem mitigação, teste e risco residual documentados separadamente dos controles de segurança da informação.
 4. Toda decisão arquitetural relevante é rastreável a uma preocupação, uma alternativa considerada e uma evidência.
 
+### 24.5 Aceitação da proposta de alto nível
+
+1. A proposta cobre as três jornadas no nível arquitetural, explicita fronteiras, responsabilidades, contratos e exclusões e respeita as decisões da seção 27.1.
+2. As decisões significativas incluem pelo menos duas alternativas plausíveis, critérios de comparação, consequências e registro da deliberação conjunta.
+3. A seleção de protótipos e simuladores está justificada pelos riscos e pelas decisões a verificar, sem assumir implementação integral da plataforma.
+4. Os recortes selecionados possuem evidências reproduzíveis para os critérios acordados. Uma verificação não executada ou malsucedida não pode ser registrada como atendida; seu efeito na aceitação exige deliberação explícita.
+5. A matriz de rastreabilidade distingue proposta, implementação, verificação e pendências, incluindo limitações, riscos residuais e próximos marcos.
+6. A equipe revisou a proposta e registrou sua aceitação ou os ajustes necessários sob coordenação do responsável pelo repositório.
+
 ## 25. Limites de escopo
 
-Ficam fora do escopo básico:
+Ficam fora do escopo da entrega:
 
+- implementação integral ou operação em produção da plataforma;
 - conexão com RNDS ou SISCAN reais;
 - certificação oficial de conformidade;
 - desenvolvimento integral de um servidor FHIR;
@@ -943,47 +968,75 @@ Ficam fora do escopo básico:
 
 Esses itens podem aparecer como restrições, sistemas externos, riscos ou extensões, mas não como obrigação de implementação.
 
+O fluxo GOV.BR / Expresso Goiás / MeuPEP descrito em [autorização de acesso](docs/autorizacao-acesso.md) e em seu [diagrama de sequência](docs/Diagrama-de-sequencia-autorizacao-acesso.md) é uma **alternativa de design em avaliação**, não um requisito aprovado. Sua adoção e eventual recorte de prototipagem dependem de decisão conjunta. A proposta não autoriza integração com contas reais nem altera os limites de dados sintéticos e de consentimento dinâmico.
+
 ## 26. Riscos da estratégia
 
 | Risco | Tratamento proposto |
 | --- | --- |
-| A disciplina tornar-se um curso de FHIR | Avaliar decisões e atributos de qualidade; fornecer exemplos e perfis de base |
+| O detalhe de FHIR desviar o foco da proposta arquitetural | Priorizar decisões e atributos de qualidade; usar exemplos e perfis de base |
 | Excesso de tecnologias | Núcleo pequeno, frentes paralelas e integrações incrementais |
-| Dependência entre equipes bloquear progresso | Contratos antecipados, substitutos de teste e testes de consumidor |
+| Dependência entre frentes bloquear progresso | Contratos antecipados, substitutos de teste e testes de consumidor |
+| Protótipos crescerem até uma implementação integral não planejada | Selecionar recortes por hipótese e risco, com limites e critérios acordados |
+| Decisões isoladas produzirem soluções incompatíveis | Deliberação conjunta, contratos compartilhados e ADRs antes de assumir novas escolhas |
 | Regras clínicas serem inventadas | Fornecer recortes oficiais e conjuntos de dados com resultados esperados |
 | Confundir protótipo com sistema clinicamente seguro | Declarar limites, usar dados sintéticos e exigir análise de segurança clínica |
-| Perfis externos mudarem durante o semestre | Fixar pacotes e terminologias por versão no início de cada incremento |
+| Perfis externos mudarem durante o projeto | Fixar pacotes e terminologias por versão no início de cada incremento |
 | RAC ser tratado como IPS ou o último atendimento como estado clínico atual | Exigir matriz semântica, nova `Composition`, proveniência, regras de seleção e validação independente dos dois documentos |
 | Portal, manual, exemplos e perfil navegável do RAC divergirem | Definir o Portal de Serviços como fonte operacional, arquivar cópias versionadas e registrar divergências em ADR antes da implementação |
-| Trabalho concentrado em poucos estudantes | Responsabilidade técnica explícita, rotação de revisão e defesa individual |
+| Trabalho e conhecimento concentrados em poucos integrantes | Responsabilidade técnica explícita, revisão cruzada e compartilhamento das decisões |
 | Montador IPS tornar-se repositório paralelo | TTL absoluto, nenhuma busca externa e critérios de exclusão verificáveis |
 | Alertas produzirem fadiga | Poucos serviços, cenários específicos, retorno dos profissionais e medição de aceitação |
 | Manual e especificações OpenAPI da API SISCAN mudarem ou divergirem | Arquivar cópias versionadas e datadas, declarar o recorte suportado e executar testes de contrato antes de cada incremento |
 
-## 27. Decisões a fixar antes da oferta
+## 27. Decisões confirmadas e pendências
 
-1. adotar FHIR R4 `4.0.1`, versão exigida pela linha de base do IPS Brasil;
-2. arquivar `br.gov.saude.ips.fhir#1.0.0`, suas dependências e exemplos, verificando o SHA-256 registrado neste documento;
-3. arquivar o modelo de informação, o Manual de Integração RAC RNDS v2.0 e os exemplos RAC com os hashes registrados neste documento, além de fixar a precedência das fontes em caso de divergência;
-4. terminologias disponíveis localmente e suas licenças;
-5. linha de base local de REPM e REDFM em `artefatos/rnds/medicamentos/`, com downloads originais, pacotes internos, exemplo, manual, hashes e recorte dos perfis utilizados;
-6. cópias versionadas do Manual de integração API SISCAN v3.0 e das duas especificações OpenAPI, recorte de operações do colo do útero e política explícita para divergências entre os artefatos;
-7. Servidor FHIR, Serviço de Validação e Terminologia e RNDS simulada fornecidos como infraestrutura comum;
-8. tamanho da turma, número de frentes e composição das equipes;
-9. linguagem e conjunto de tecnologias permitidos ou fornecidos;
-10. indicadores CQL obrigatórios e conjuntos de dados de referência;
-11. política de autenticação e credenciais exclusivamente educacionais.
+### 27.1 Decisões confirmadas
+
+Diretrizes confirmadas com o responsável pelo repositório em 11 de setembro de 2026, juntamente com a linha de base técnica já definida neste documento:
+
+| Tema | Diretriz vigente |
+| --- | --- |
+| Contexto | Equipe de desenvolvimento de software responsável pela proposta de uma plataforma estadual de interoperabilidade em saúde |
+| Organização | Uma equipe de oito integrantes, coordenada pelo responsável pelo repositório |
+| Governança | Decisões de projeto tomadas em conjunto; frentes distribuem responsabilidades, mas não possuem autonomia decisória isolada |
+| Entrega | Proposta de arquitetura de alto nível, apoiada por protótipos e simuladores selecionados para verificar decisões |
+| Planejamento | Fases e marcos com esforço e prazos definidos em conjunto, sem carga de horas fixa |
+| Plataforma básica | Java e Spring Boot |
+| Servidor FHIR e validador | HAPI FHIR; versões e configuração ainda serão fixadas |
+| Simuladores | Construídos pela equipe ao longo do esforço, conforme os recortes selecionados; não presumir que já estejam disponíveis |
+| Linha de base FHIR | FHIR R4 `4.0.1` e IPS Brasil `br.gov.saude.ips.fhir#1.0.0`, com as dependências e ressalvas da seção 10 |
+| Dados e integrações | Dados exclusivamente sintéticos e sistemas externos simulados, sem uso clínico real ou conexão aos ambientes oficiais |
+| GOV.BR / Expresso Goiás / MeuPEP | Alternativa de design em avaliação, ainda não aprovada como requisito |
+| Agente de desenvolvimento | Colaborador técnico para produzir e revisar documentação, protótipos e testes sob demanda, explicitando alternativas e justificativas |
+| Orientações do agente | `AGENTS.md` na raiz; este documento continua sendo a fonte de verdade sobre o trabalho |
+
+O agente pode executar tarefas que materializam decisões registradas, mas não decide pelo conjunto da equipe. Dúvidas com impacto em objetivo, escopo, arquitetura, tecnologias, contratos ou critérios de aceitação devem ser apresentadas ao responsável pelo repositório. A decisão comunicada deve repercutir neste documento e, quando significativa para a arquitetura, em ADR; mudanças no modo de atuação do agente também repercutem em `AGENTS.md`. Uma alternativa ou ausência de resposta não equivale a aprovação.
+
+### 27.2 Pendências a resolver em conjunto
+
+As pendências abaixo não são autorização para escolher silenciosamente uma solução. Cada uma deve ser resolvida antes de executar a atividade que dela depende; as demais frentes podem prosseguir com decisões já confirmadas.
+
+1. selecionar os protótipos, hipóteses, simuladores, critérios de verificação e prioridades de cada marco;
+2. distribuir responsabilidades entre os oito integrantes e definir esforço, prazos, revisão e dependências;
+3. fixar versões compatíveis de Java, Spring Boot e HAPI FHIR, além das ferramentas de construção, empacotamento e implantação;
+4. definir a configuração da infraestrutura comum baseada em HAPI FHIR, a persistência e o ambiente de execução; a escolha do produto não comprova que a infraestrutura esteja instalada;
+5. arquivar `br.gov.saude.ips.fhir#1.0.0`, suas dependências e exemplos, verificando o SHA-256 registrado neste documento;
+6. arquivar o modelo de informação, o Manual de Integração RAC RNDS v2.0 e os exemplos RAC com os hashes registrados, além de resolver divergências conforme a precedência das fontes;
+7. fixar as terminologias disponíveis localmente e verificar suas licenças;
+8. incorporar a linha de base REPM e REDFM no local previsto `artefatos/rnds/medicamentos/`, com originais, pacotes internos, exemplo, manual, hashes e recorte dos perfis utilizados;
+9. arquivar o Manual de integração API SISCAN v3.0 e as duas especificações OpenAPI, declarar as operações emuladas e registrar o tratamento de divergências entre as fontes;
+10. definir indicadores CQL e conjuntos de dados de referência caso essa capacidade seja selecionada para prototipagem;
+11. definir a política de autenticação, autorização e credenciais de teste, avaliando a alternativa GOV.BR / MeuPEP sem presumir sua adoção.
 
 ## 28. Fontes de referência
 
-- [Ementa da disciplina](ementa.md)
-- [Material de Design de Software](design.md)
 - [Rede Nacional de Dados em Saúde](https://www.gov.br/saude/pt-br/composicao/seidigi/rnds)
 - [Federalização da RNDS em 2026](https://www.gov.br/saude/pt-br/assuntos/noticias-ms/2026/julho/ministerio-da-saude-apresenta-estrategia-sobre-rede-nacional-de-dados-em-saude)
 - [Portaria GM/MS nº 6.100/2024 — REPM e REDFM](https://www.gov.br/saude/pt-br/composicao/sectics/daf/ceaf/legislacao/portaria-gm-ms-no-6-100-de-17-de-dezembro-de-2024)
 - [Serviço REDFM no Portal atual do DATASUS](https://portalservicos-datasus.saude.gov.br/servico/BBgfSNopOs)
 - [Anexos técnicos REDFM no Portal legado](https://servicos-datasus.saude.gov.br/detalhe/hFQ5SvwTgo)
-- [Cópias verificadas de REPM e REDFM no repositório da disciplina](artefatos/rnds/medicamentos/README.md)
+- [Local previsto para o índice de artefatos REPM e REDFM](artefatos/rnds/medicamentos/README.md)
 - [Perfil navegável BRRegistroPrescricaoMedicamento — fonte auxiliar](https://simplifier.net/RedeNacionaldeDadosemSaude/brregistroprescricaomedicamento)
 - [Ontologia Brasileira de Medicamentos](https://www.in.gov.br/en/web/dou/-/portaria-gm/ms-n-6.093-de-16-de-dezembro-de-2024-602264704)
 - [Projeto IPS Brasil](https://hospitais.proadi-sus.org.br/projeto/hsl/promocao-do-ambiente-de-interconectividade-em-saude-como-apoio-expansao-da)
@@ -1007,36 +1060,36 @@ Esses itens podem aparecer como restrições, sistemas externos, riscos ou exten
 - [FHIR R4 Subscription](https://hl7.org/fhir/R4/subscription.html)
 - [Subscriptions R5 Backport](https://hl7.org/fhir/uv/subscriptions-backport/)
 
-## 29. Sequência de ações para concluir a prática
+## 29. Sequência de ações para concluir a proposta
 
-1. **Delimitar o problema.** Descreva as três jornadas clínicas, identifique pessoas, sistemas clientes, plataformas externas e serviços de interoperabilidade, construa o glossário comum e registre explicitamente o escopo, as exclusões, o uso exclusivo de dados sintéticos e as dúvidas iniciais das equipes.
+1. **Delimitar o problema.** Descreva as três jornadas clínicas, identifique pessoas, sistemas clientes, plataformas externas e serviços de interoperabilidade e construa o glossário comum. Registre o escopo da proposta de alto nível, as exclusões, os dados sintéticos e as dúvidas da equipe.
 
 2. **Levantar requisitos significativos.** Defina requisitos funcionais, restrições e cenários mensuráveis de qualidade para disponibilidade, desempenho, segurança, privacidade, segurança clínica, modificabilidade e conectividade. Indique, em cada requisito, a parte interessada, a prioridade, o risco, a resposta esperada e a evidência que verificará seu atendimento.
 
-3. **Fixar as linhas de base.** Arquive e identifique por versão e hash os artefatos FHIR R4, RAC, IPS, REPM, REDFM e SISCAN. Registre também as dependências, terminologias, licenças, recortes implementados e regras de precedência aplicáveis a eventuais divergências entre as fontes consultadas.
+3. **Fixar as linhas de base necessárias.** Identifique os artefatos FHIR R4, RAC, IPS, REPM, REDFM e SISCAN usados pela proposta. Antes de empregá-los em um protótipo, arquive as cópias necessárias com versão, hash, dependências, terminologias e termos de uso verificados. Registre pendências e divergências sem apresentar arquivos previstos como já disponíveis.
 
 4. **Comparar arquiteturas candidatas.** Crie pelo menos duas alternativas para distribuição de responsabilidades, persistência e comunicação e avalie-as pelos cenários de qualidade. Produza contexto e contêineres C4, justifique a solução escolhida e registre em ADR as opções rejeitadas e as consequências de cada decisão.
 
-5. **Organizar as frentes de trabalho.** Distribua responsabilidades pelos serviços e capacidades transversais, nomeie responsáveis por contratos e integrações e defina dependências entre equipes. Publique, em cada frente, um contrato versionado, exemplos válidos e inválidos, um simulador, uma política de compatibilidade, testes de contrato e indicadores operacionais.
+5. **Organizar as frentes de trabalho.** Distribua responsabilidades entre os oito integrantes, nomeie responsáveis por contratos e integrações e defina dependências. Leve as propostas à decisão conjunta, sem autonomia isolada por frente.
 
-6. **Especificar contratos e comportamento.** Defina APIs, perfis, eventos, estados, erros, identidade, autorização, idempotência, concorrência e retenção de cada componente. Produza a especificação OpenAPI ou FHIR aplicável, diagramas de sequência e de estados, modelo de domínio e rastreabilidade entre requisito, decisão, contrato e teste.
+6. **Especificar contratos e comportamento.** Defina responsabilidades, APIs, perfis, eventos, estados, erros, identidade, autorização, idempotência, concorrência e retenção no nível necessário à proposta. Produza diagramas, modelo de domínio e rastreabilidade; detalhe contratos executáveis nos recortes selecionados.
 
-7. **Implementar a publicação de RAC.** Implemente uma fatia executável na qual o PEP simulado produza um RAC, o Gateway autorize a chamada, os serviços validem o documento e sua assinatura, e o Serviço de Documentos RNDS publique, consulte e reconcilie identificadores na RNDS simulada.
+7. **Selecionar os protótipos.** Compare as incertezas e os riscos e escolha em conjunto os recortes que precisam de evidência executável. Para cada um, registre hipótese, simuladores necessários, critérios aplicáveis da seção 24, limites, responsáveis e marco de conclusão. Não assuma a implementação dos quatro incrementos completos.
 
-8. **Verificar o primeiro incremento.** Teste documento inválido, assinatura inválida ou indeterminada, repetição idempotente, chave reutilizada com conteúdo diferente, falha de rede, versão incompatível, substituição e exclusão. Demonstre, nas evidências, a autoria preservada, a autorização, a auditoria e a ausência de conteúdo clínico na telemetria.
+8. **Preparar o ambiente do recorte.** Fixe em conjunto versões e configuração de Java, Spring Boot e HAPI FHIR. Configure os componentes necessários e construa os simuladores sob responsabilidade da equipe, sem depender de ambientes oficiais ou presumir infraestrutura já fornecida.
 
-9. **Implementar a integração SISCAN.** Implemente uma requisição FHIR que atravesse o Gateway e o adaptador até a API SISCAN simulada, com tradução para o DTO nativo, autenticação educacional, protocolo único e acompanhamento assíncrono. Inclua consulta periódica, retorno assíncrono, laudos preliminar, final e corrigido e notificação por Subscription.
+9. **Prototipar RAC e RNDS, quando selecionados.** Exercite a produção de RAC sintético, autorização no Gateway, validação documental e de assinatura e integração com a RNDS simulada no recorte acordado. Verifique as hipóteses de autoria, idempotência, falha de rede e reconciliação de identificadores.
 
-10. **Submeter o SISCAN a incidentes.** Execute testes de provedor derivados das especificações OpenAPI e injete indisponibilidade, requisição triplicada, retorno duplicado, atraso e correção posterior. Distinga estado técnico de estado clínico, diagnostique cada falha, compare alternativas, registre decisões e demonstre convergência observável.
+10. **Prototipar SISCAN, quando selecionado.** Implemente o recorte FHIR ↔ DTO nativo com autenticação de teste e estados técnicos e clínicos separados. Use testes derivados das cópias OAS e os incidentes pertinentes para avaliar processamento assíncrono, consulta periódica, retorno duplicado, laudos e reconciliação.
 
-11. **Implementar a interoperabilidade de medicamentos.** Publique e correlacione prescrição, dispensação parcial e administração por prestadores simulados, mantendo atos, autoria e proveniência distintos. Valide os perfis fixados e implemente autorização por finalidade, idempotência, quarentena de referências não resolvidas, notificação e reconciliação após mensagens fora de ordem.
+11. **Prototipar medicamentos, quando selecionados.** Publique e correlacione os registros do recorte escolhido por prestadores simulados, mantendo prescrição, dispensação, administração e uso declarado distintos. Verifique perfis, autoria, autorização, idempotência e o tratamento das referências e mensagens fora de ordem pertinentes ao recorte.
 
-12. **Montar e validar o IPS.** Selecione, por meio do sistema cliente, fatos de pelo menos dois RACs, um laudo final e um registro de medicamento. Resolva os conflitos explicitamente e use o Montador Efêmero para produzir nova Composition, Bundle válido, proveniência completa e expiração verificável.
+12. **Prototipar a montagem de IPS, quando selecionada.** Use fatos selecionados pelo cliente e decisões explícitas de conflito para produzir nova `Composition`, `Bundle` válido, proveniência e expiração verificável. Se o recorte for o cenário integrado da seção 24.2, inclua pelo menos dois RACs, um laudo final e um registro de medicamento. Compare o resultado com a alternativa de visão dinâmica.
 
-13. **Integrar federação, medida e decisão.** Envie o IPS diretamente à plataforma simulada de outra UF, sem intermediação da RNDS, e consulte-o no destino. Sobre os dados integrados, execute um indicador CQL reproduzível e um CDS Service contextual, explicável e tolerante a atraso.
+13. **Exercitar federação, CQL e CDS conforme a seleção.** Nos recortes escolhidos, avalie a troca direta entre plataformas estaduais simuladas, sem intermediação da RNDS, e os indicadores ou serviços de apoio à decisão pertinentes. Mantenha explícito o que ficou apenas no nível da proposta.
 
-14. **Avaliar propriedades transversais.** Construa o modelo de ameaças, a análise separada de perigos clínicos, a política de minimização e os controles de acesso, auditoria e observabilidade. Documente mitigação, teste e risco residual para cada risco relevante e inspecione logs, métricas e rastros para impedir exposição clínica.
+14. **Avaliar propriedades transversais.** Construa o modelo de ameaças, a análise separada de perigos clínicos, a política de minimização e a estratégia de acesso, auditoria e observabilidade. Nos protótipos, execute as verificações acordadas e inspecione logs, métricas e rastros. Distinga mitigação projetada de mitigação verificada.
 
-15. **Executar incidentes e revisão cruzada.** Distribua os incidentes pedagógicos entre equipes e revise contratos, código, diagramas e evidências de outra frente. Para cada achado, produza diagnóstico e alternativas, registre a decisão, aplique a alteração mínima, repita os testes e atualize a matriz de rastreabilidade e os ADRs afetados.
+15. **Executar incidentes e revisão cruzada.** Distribua os incidentes selecionados entre os integrantes e revise artefatos de outras frentes. Para cada achado, produza diagnóstico e alternativas, registre a decisão conjunta, aplique a alteração mínima e atualize verificações, matriz de rastreabilidade e ADRs.
 
-16. **Demonstrar e defender o trabalho integrado.** Execute de ponta a ponta as jornadas e seus principais fluxos de falha, confira todos os critérios de aceitação e apresente as evidências produzidas. Encerre com a defesa individual das decisões, a retrospectiva e a exposição das limitações e evoluções propostas.
+16. **Consolidar e apresentar a proposta.** Integre a visão arquitetural, os contratos, as decisões e as evidências dos protótipos selecionados. Confira os critérios da seção 24.5 e registre a revisão conjunta, as limitações, os riscos residuais, a retrospectiva e os próximos marcos, sem declarar validação dos fluxos não exercitados.
