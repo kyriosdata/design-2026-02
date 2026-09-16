@@ -38,7 +38,7 @@ Essas nove responsabilidades são o ponto de partida de ambas as arquiteturas ca
 
 ```plantuml
 @startuml Publicacao_RAC_Alternativa_1
-!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://cdn.jsdelivr.net/gh/plantuml-stdlib/C4-PlantUML/C4_Container.puml
 
 LAYOUT_WITH_LEGEND()
 
@@ -80,10 +80,10 @@ Essa alternativa prioriza simplicidade operacional (menos peças para implantar,
 
 ## 5. Arquitetura Candidata 2 — serviços mais especializados
 
-![alternativa1](/publicacao-rac-alternativa2.png)
+![alternativa2](/publicacao-rac-alternativa2.png)
 ```plantuml
 @startuml Publicacao_RAC_Alternativa_2
-!include https://raw.githubusercontent.com/plantuml-stdlib/C4-PlantUML/master/C4_Container.puml
+!include https://cdn.jsdelivr.net/gh/plantuml-stdlib/C4-PlantUML/C4_Container.puml
 
 LAYOUT_WITH_LEGEND()
 
@@ -277,3 +277,45 @@ O desenho atual cobre apenas a fatia de publicação de RAC. Nos incrementos seg
 - Quatro cenários de falha alterando ou confirmando decisões de desenho: seção 8.
 - Escolha rastreada a ASRs e documentada em ADR: seções 9 e 10.
 - Dados exclusivamente sintéticos, sem detalhamento de componentes ou classes internos: todo o documento.
+
+## 13. Diagrama complementar — integrações independentes com RNDS e SISCAN simuladas
+
+Recorte de contêineres complementar, cobrindo o item 5 do passo 6 do encadeamento do sistema (integrações independentes com RNDS e SISCAN, fora da federação interestadual). Versão corrigida após revisão do commit `ef08c8f`: o PEP é representado como `System_Ext`, e o Serviço de Documentos RNDS aparece explicitamente entre o Gateway e a RNDS, tornando visíveis a validação, a idempotência e a reconciliação de identificadores previstas em `pratica.md` (seções 6 e 12.1–12.2).
+
+![recorte-rnds-siscan](/topico5.png)
+
+```plantuml
+@startuml Container_RAC_RNDS_SISCAN
+!include https://cdn.jsdelivr.net/gh/plantuml-stdlib/C4-PlantUML/C4_Container.puml
+
+LAYOUT_WITH_LEGEND()
+
+title Diagrama de Contêineres (C4) - Recorte\nIntegrações independentes com RNDS simulada e API SISCAN simulada (item 5, passo 6)
+
+System_Ext(pep, "PEP", "PEP simulado que produz e consome recursos e documentos FHIR")
+
+System_Boundary(plataforma, "Plataforma Estadual de Interoperabilidade em Saúde") {
+    Container(gateway, "Gateway de Integração", "Ponto de entrada", "Autentica, aplica políticas e encaminha a solicitação ao serviço responsável")
+    Container(servicoDocumentosRnds, "Serviço de Documentos RNDS", "Orquestrador RNDS", "Valida o documento, garante idempotência, publica na RNDS e reconcilia identificadores local/RNDS")
+    Container(adaptador, "Adaptador de Interoperabilidade FHIR-SISCAN")
+}
+
+System_Ext(rnds, "RNDS simulada", "Fonte e destino nacionais de documentos FHIR (RAC, IPS, REPM, REDFM)")
+System_Ext(siscan, "API SISCAN simulada", "Contrato nativo (JSON/REST) do Sistema de Informação do Câncer para requisição e laudo de exames")
+
+Rel(pep, gateway, "Envia e recebe recursos/documentos FHIR", "HTTPS / FHIR")
+
+Rel(gateway, servicoDocumentosRnds, "Encaminha requisição já autenticada e autorizada")
+Rel(servicoDocumentosRnds, rnds, "Publica e consulta documentos FHIR validados", "Web Service RNDS")
+Rel(rnds, servicoDocumentosRnds, "Retorna confirmação, identificador RNDS e conteúdo dos documentos")
+
+Rel(gateway, adaptador, "Encaminha ao serviço responsável pela integração SISCAN")
+Rel(adaptador, siscan, "Envia requisição/laudo já traduzido para o DTO nativo")
+Rel(siscan, adaptador, "Envia e requisita documento no DTO nativo, retorna codigoProcesso")
+
+SHOW_LEGEND()
+
+@enduml
+```
+
+Este recorte é complementar ao desenho das seções 4–10: cobre a integração de entrada (Gateway → Serviço de Documentos RNDS/Adaptador) em um nível de abstração mais alto, enquanto as seções 4–10 detalham as alternativas internas de contêineres especificamente para a responsabilidade de publicação de RAC. Nenhum dos dois substitui o outro.
