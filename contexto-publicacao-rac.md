@@ -34,7 +34,7 @@ Essas nove responsabilidades são o ponto de partida de ambas as arquiteturas ca
 - ASR-6 Escalabilidade: volume potencialmente alto de publicações concorrentes, herdado do requisito de escala da plataforma nacional como um todo.
 
 ## 4. Arquitetura Candidata 1 — menor número de contêineres, maior modularidade interna
-![alternativa1](/publicacao-rac-alternativa1.png)
+![alternativa1](/alternativa1-publicacaodeRac.png)
 
 ```plantuml
 @startuml Publicacao_RAC_Alternativa_1
@@ -80,7 +80,7 @@ Essa alternativa prioriza simplicidade operacional (menos peças para implantar,
 
 ## 5. Arquitetura Candidata 2 — serviços mais especializados
 
-![alternativa2](/publicacao-rac-alternativa2.png)
+![alternativa2](/alternativa2-publicacaodeRac.png)
 ```plantuml
 @startuml Publicacao_RAC_Alternativa_2
 !include https://cdn.jsdelivr.net/gh/plantuml-stdlib/C4-PlantUML/C4_Container.puml
@@ -162,7 +162,7 @@ Em nenhuma das duas alternativas o RAC em si é persistido dentro da plataforma 
 
 ## 7. Diagrama de sequência — fluxo principal (alternativa escolhida)
 
-![diagrama-sequencia](/diagrama-sequencia-alternativa2.png)
+![diagrama-sequencia](/diagrama-de-sequencia-publicacaoRac.png)
 
 ```plantuml
 @startuml Publicacao_RAC_Fluxo_Principal
@@ -282,7 +282,7 @@ O desenho atual cobre apenas a fatia de publicação de RAC. Nos incrementos seg
 
 Recorte de contêineres complementar, cobrindo o item 5 do passo 6 do encadeamento do sistema (integrações independentes com RNDS e SISCAN, fora da federação interestadual). Versão corrigida após revisão do commit `ef08c8f`: o PEP é representado como `System_Ext`, e o Serviço de Documentos RNDS aparece explicitamente entre o Gateway e a RNDS, tornando visíveis a validação, a idempotência e a reconciliação de identificadores previstas em `pratica.md` (seções 6 e 12.1–12.2).
 
-![recorte-rnds-siscan](/topico5.png)
+![recorte-rnds-siscan](/recorte-api-siscan.png)
 
 ```plantuml
 @startuml Container_RAC_RNDS_SISCAN
