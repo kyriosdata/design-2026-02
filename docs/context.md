@@ -11,6 +11,18 @@ Plataforma Estadual de Interoperabilidade em Saúde: conjunto de serviços que c
 
 ## Atores e sistemas externos
 
+<<<<<<< HEAD:docs/context.md
+## 4. Relacionamentos e Fluxo de Dados
+O mapeamento de como os componentes se comunicam entre si:
+* As **Pessoas** utilizam as **Aplicações Clínicas** no dia a dia para registro e consulta clínica.
+* As **Aplicações Clínicas** se comunicam com a **Plataforma** via protocolos FHIR / HTTP para enviar/receber recursos e acionar fluxos de interoperabilidade.
+* O **Operador** interage com a **Plataforma** para administrá-la, fazendo requisições e consultas operacionais.
+* Como distribuidora e consumidora, a **Plataforma** se conecta com os sistemas externos da seguinte forma:
+    * Compartilha e troca informações de saúde com **Outras plataformas** utilizando um Contrato Federado.
+    * Valida, publica e consulta documentos diretamente na **RNDS** por meio do padrão FHIR.
+    * Traduz e envia as solicitações/laudos de exames ao **SISCAN** utilizando JSON nativo / REST.
+    * Envia os dados pertinentes e estratégicos em direção à **Aplicação Administrativa** para apoiar a gestão estadual.
+=======
 | Nome | Tipo | Papel |
 | --- | --- | --- |
 | Operador | Pessoa | Opera a plataforma diretamente |
@@ -36,3 +48,4 @@ Plataforma Estadual de Interoperabilidade em Saúde: conjunto de serviços que c
 O ICP-Brasil aparece como emissor de certificados tanto para a plataforma quanto para as Aplicações Clínicas porque a assinatura digital de documentos clínicos (por exemplo, o RAC) depende de certificados emitidos sob essa infraestrutura, conforme descrito no glossário da RNDS: https://rnds-guia.saude.gov.br/docs/glossario#icp-brasil
 
 Esse diagrama não detalha contêineres internos como Gateway, Servidor FHIR, Serviço de Documentos RNDS, Montador de IPS ou Adaptador FHIR-SISCAN. Esse detalhamento fica para o próximo nível do C4, o diagrama de contêineres.
+>>>>>>> main:context.md
