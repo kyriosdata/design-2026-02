@@ -1,78 +1,33 @@
-# Diagrama de Contexto (Nível 1) - Plataforma Estadual de Interoperabilidade em Saúde
+O Diagrama de Contexto (Nível 1 do C4 Model) mapeia a Plataforma de Interoperabilidade de Saúde, estabelecendo as fronteiras do sistema central em relação aos seus usuários e aos sistemas externos com os quais interage.
 
-> Diagrama de referência: ![Diagrama de Contexto](./imagens/contexto.svg)
+**Configurações Iniciais do Código**
 
-## Visão geral
+* **Importação do C4 PlantUML:** A diretiva de inclusão carrega os estilos, paletas de cores e padronizações visuais do C4 Model no PlantUML.  
+* **Legenda Automática:** A instrução de layout insere uma legenda no diagrama explicando o significado das cores de pessoas, sistemas internos e sistemas externos.  
+* **Título:** Define a identificação visual posicionada no topo da imagem gerada.
 
-Este diagrama representa o **Nível 1 do modelo C4 (Contexto)** da Plataforma Estadual de Interoperabilidade em Saúde. Ele mostra como a plataforma se relaciona com as pessoas que a utilizam (direta ou indiretamente) e com os sistemas externos com os quais ela troca informações, sem detalhar sua arquitetura interna (Gateway, Servidor FHIR, Montador IPS etc.), que fica reservada para o diagrama de Contêineres (Nível 2).
+**Atores e Pessoas (Person)**
 
-## Sistema principal
+* **Pessoa Atendida:** Representa os pacientes que consultam seu próprio histórico clínico e sínteses de atendimento por meio de aplicações externas.  
+* **Profissionais de Saúde:** Agrupa médicos, enfermeiros, farmacêuticos e equipes de laboratório que alimentam o sistema com registros de atendimento e consultam o histórico dos pacientes.  
+* **Gestores e Auditores:** Abrange secretarias de saúde, auditores e operadores responsáveis por monitorar a conformidade com a LGPD, analisar logs de observabilidade e acompanhar métricas operacionais.
 
-**Plataforma Estadual de Interoperabilidade em Saúde**
-Conjunto de serviços executáveis (Gateway, Servidor FHIR, Servidor AuthZ, Montador IPS, Serviço de Medicamentos, Adaptador FHIR-SISCAN, entre outros) responsável por integrar os sistemas participantes de uma Unidade Federativa (UF). O **Servidor AuthZ** da Plataforma decide a autorização de acesso clínico (estabelecimento, vínculo profissional, finalidade de uso e consentimento) a partir da identidade autenticada e das políticas do domínio — essa decisão **não é delegada** ao provedor de identidade.
+**Sistema Central em Escopo (System)**
 
-## Pessoas (atores)
+* **Plataforma de Interoperabilidade:** Representa o único sistema central sendo efetivamente desenvolvido no projeto. Funciona com base no padrão FHIR R4 e consolida internamente os serviços de autenticação via Gateway, validação, montagem efêmera de IPS, serviços RNDS e o adaptador para o SISCAN.
 
-| Ator | Papel |
-|---|---|
-| **Pessoa Atendida (Paciente)** | Busca continuidade do cuidado, privacidade e acesso aos próprios dados. Autentica-se via GOV.BR. |
-| **Profissional de Saúde** | Registra atendimentos, prescreve, dispensa ou administra medicamentos e consulta o histórico clínico do paciente. |
-| **Gestor** (Secretaria Municipal/Estadual) | Responsável por cadastro de estabelecimentos, coordenação regional e indicadores. |
-| **DPO / Encarregado de Dados** | Responsável pela base legal, minimização, trilha de auditoria e consentimento. |
-| **Operador da Plataforma** | Equipe de operação responsável por observabilidade, recuperação e diagnóstico de falhas da plataforma. |
+**Sistemas Externos (System\_Ext)**
 
-## Sistemas externos
+* **Sistemas Clientes (PEPs):** Prontuários Eletrônicos e aplicações clínicas simuladas que geram os dados de atendimentos e solicitam sínteses de informações.  
+* **RNDS Simulada:** Instância simulada da Rede Nacional de Dados em Saúde. Funciona como o repositório nacional oficial para armazenamento e consulta de documentos clínicos padronizados como RAC e IPS.  
+* **API SISCAN Simulada:** Sistema Nacional de Informação do Câncer. Opera como uma aplicação externa que exige contrato de dados em formato JSON nativo.  
+* **Plataforma Estadual Par:** Representa a infraestrutura de outra Unidade da Federação, permitindo a comunicação federada entre estados.
 
-| Sistema | Descrição |
-|---|---|
-| **Aplicações Clínicas / PEPs (AC)** | Sistemas clientes que produzem e consomem recursos e documentos FHIR a partir de eventos assistenciais. Usados por pacientes e profissionais de saúde. |
-| **GOV.BR** | Provedor nacional de identidade digital (SSO). Realiza **apenas a autenticação (AuthN)** dos usuários finais e disponibiliza atributos de identidade verificados. **Não define** estabelecimento, vínculo profissional, finalidade de uso ou consentimento para dados clínicos — essa decisão é da Plataforma. |
-| **Sistema de Cadastro de Estabelecimento** | Registro dos estabelecimentos de saúde participantes, mantido/gerido pelo Gestor. |
-| **Outra Plataforma Estadual** | Instância de outra unidade federativa com a qual a plataforma troca dados diretamente por contrato federado. |
-| **RNDS Simulada** | Rede Nacional de Dados em Saúde. Fonte e destino nacional de documentos (RAC, IPS), sem função de intermediária entre UFs. |
-| **API SISCAN Simulada** | Sistema de Informação do Câncer. Recebe e processa requisição/laudo via contrato JSON nativo, não FHIR. |
-| **Aplicação Administrativa** | Consumida por gestores (ex.: secretário de saúde) para obter indicadores e informações de gestão do estado. |
+**Fluxos e Integrações (Rel)**
 
-## Relacionamentos
+* **Interação Humana:** Pacientes e profissionais de saúde interagem diretamente com as interfaces dos PEPs. Gestores e auditores interagem diretamente com a Plataforma para obter dados de auditoria.  
+* **Comunicação PEPs e Plataforma:** Os PEPs enviam eventos de atendimento e solicitam sínteses clínicas à Plataforma via protocolo HTTPS utilizando o padrão FHIR R4.  
+* **Comunicação Plataforma e RNDS:** A Plataforma envia e recupera o ciclo de vida dos documentos clínicos na RNDS através de Web Services FHIR sobre HTTPS.  
+* **Comunicação Plataforma e SISCAN:** A Plataforma utiliza seu componente adaptador interno para converter os dados FHIR e transmiti-los em JSON Nativo via HTTPS para a API do SISCAN.  
+* **Comunicação Entre Estados:** A troca de informações com a Plataforma Estadual Par é realizada diretamente entre os gateways de origem e destino por meio de um contrato federado sobre HTTPS.
 
-### Pessoas → Aplicações Clínicas e Autenticação
-- **Paciente** acessa informações e histórico de saúde através das **Aplicações Clínicas**.
-- **Profissional de Saúde** registra atendimentos, prescrições e consultas clínicas através das **Aplicações Clínicas**.
-- **Paciente** e **Profissional de Saúde** se autenticam e obtêm atributos de identidade verificados junto ao **GOV.BR** (AuthN / OIDC) — a autenticação não implica, por si só, autorização de acesso clínico.
-
-### Gestor
-- **Gestor** cadastra e mantém dados dos estabelecimentos no **Sistema de Cadastro de Estabelecimento**.
-- **Gestor** consulta indicadores e informações de gestão na **Aplicação Administrativa**.
-
-### DPO e Operador
-- **DPO** realiza auditoria e verifica consentimento junto à **Plataforma** (via trilha de auditoria).
-- **Operador** opera, monitora e diagnostica falhas da **Plataforma**; a **Plataforma** expõe métricas, logs e alertas para o **Operador**.
-
-### Aplicações Clínicas ↔ Plataforma
-- **Aplicações Clínicas** enviam/recebem recursos FHIR e acionam fluxos de interoperabilidade com a **Plataforma** (FHIR / HTTPS).
-- **Plataforma** retorna resultados, notificações e apoio à decisão às **Aplicações Clínicas** (FHIR / CDS Hooks).
-- **Aplicações Clínicas** delegam a **autenticação (AuthN)** do usuário final ao **GOV.BR** (OpenID Connect).
-- **Plataforma** valida o token e obtém atributos de identidade autenticados junto ao **GOV.BR** (OIDC / Introspecção de Token). A **autorização de acesso clínico** (estabelecimento, vínculo profissional, finalidade de uso e consentimento) é decidida internamente pelo Servidor AuthZ da Plataforma, com base nessa identidade e nas políticas do domínio — não pelo GOV.BR.
-
-### Plataforma ↔ Sistemas Externos
-- **Plataforma** consulta dados de estabelecimentos participantes no **Sistema de Cadastro de Estabelecimento**.
-- **Plataforma** e **Outra Plataforma Estadual** compartilham e trocam informações de saúde interestaduais — IPS (Contrato Federado), nos dois sentidos.
-- **Plataforma** valida, publica e consulta documentos (RAC, IPS) na **RNDS** (FHIR); a **RNDS** retorna documentos e confirmações de publicação (FHIR).
-- **Plataforma** traduz e envia requisições e recebe laudos de exames na **API SISCAN** (JSON nativo / REST); o **SISCAN** retorna laudos preliminar, final e corrigido (JSON nativo / REST).
-- **Plataforma** fornece indicadores e dados agregados para gestão à **Aplicação Administrativa**.
-
-## Separação entre identidade e autorização clínica
-
-Ponto de atenção incorporado após revisão: **identidade (quem é a pessoa) e autorização de acesso clínico (o que ela pode fazer, onde e com qual finalidade) são responsabilidades distintas.**
-
-- O **GOV.BR** resolve apenas **AuthN**: confirma quem é o usuário e fornece atributos de identidade verificados.
-- A **Plataforma** (via seu Servidor AuthZ) é quem decide a **autorização de acesso clínico**, combinando a identidade autenticada com políticas locais de estabelecimento, vínculo profissional, finalidade de uso e consentimento do paciente.
-
-Essa separação está representada no `contexto.svg` por duas notas explícitas — uma ao lado do GOV.BR e outra junto à Plataforma — e reflete o requisito descrito na seção 12.2 do documento da disciplina (`pratica.md`), segundo o qual toda operação sobre documentos exige "organização, finalidade de uso e contexto de paciente autorizados", ou seja, uma decisão local da Plataforma, e não um subproduto do login.
-
-## Resumo do fluxo
-
-1. **Pacientes** e **profissionais de saúde** interagem com as **Aplicações Clínicas**, autenticando-se (AuthN) via **GOV.BR**.
-2. As **Aplicações Clínicas** trocam recursos FHIR com a **Plataforma**, que valida o token de identidade junto ao **GOV.BR** e, internamente, decide a autorização de acesso clínico com base em suas próprias políticas.
-3. A **Plataforma** se integra com sistemas nacionais (**RNDS**, **SISCAN**) e com **outras plataformas estaduais**, além de consultar o **Sistema de Cadastro de Estabelecimento** gerido pelo **Gestor**.
-4. **Gestores** acompanham indicadores pela **Aplicação Administrativa**; **DPO** e **Operador** cuidam, respectivamente, da conformidade/auditoria e da operação técnica da **Plataforma**.

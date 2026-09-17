@@ -1,0 +1,85 @@
+@startuml
+skinparam componentStyleuml2
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+title Diagrama de Análise de Riscos - Plataforma Estadual de Interoperabilidade em Saúde
+
+' Define os tipos de elementos com cores e estereótipos
+skinparam rectangle {
+    BackgroundColor<<Risk>> #FFD2D2
+    BorderColor<<Risk>> #D80000
+    BackgroundColor<<Mitigation>> #E2F0D9
+    BorderColor<<Mitigation>> #385723
+    BackgroundColor<<Component>> #ECECFF
+    BorderColor<<Component>> #00008B
+}
+
+package "R1. Riscos de Arquitetura e Design" {
+    rectangle "<b>R1.1 - Acoplamento excessivo com FHIR R4</b>\nO design da aplicação ficar dependente\ndireto do modelo FHIR sem abstração" as R1_1 <<Risk>>
+    rectangle "<b>R1.2 - Acúmulo de Estado em Serviço Efêmero</b>\nRetenção indevida de dados clínicos no\nMontador de IPS pós-sessão (Violação LGPD)" as R1_2 <<Risk>>
+    
+    rectangle "<b>M1.1:</b> Arquitetura em camadas e DTOs\nseparados das entidades internas" as M1_1 <<Mitigation>>
+    rectangle "<b>M1.2:</b> Repositório Transacional Efêmero\ncom TTL máximo de 60 min e limpeza automática" as M1_2 <<Mitigation>>
+
+    R1_1 .right.> M1_1 : Mitigado por
+    R1_2 .right.> M1_2 : Mitigado por
+}
+
+package "R2. Riscos de Integração e Contratos" {
+    rectangle "<b>R2.1 - Incompatibilidade de Versões</b>\nEvolução ou divergência não tratada entre\nperfis RAC (v2.0), IPS (STU1) e REDFM" as R2_1 <<Risk>>
+    rectangle "<b>R2.2 - Inconsistência na Tradução FHIR-SISCAN</b>\nFalha ou perda semântica no Adaptador\nao mapear JSON nativo para recursos FHIR" as R2_2 <<Risk>>
+    rectangle "<b>R2.3 - Falha na Comunicação Interestadual</b>\nIndisponibilidade ou falha de contrato no\nintercâmbio federado entre plataformas estaduais" as R2_3 <<Risk>>
+
+    rectangle "<b>M2.1:</b> Congelamento de versão local e\nServiço de Validação/Terminologia rígido" as M2_1 <<Mitigation>>
+    rectangle "<b>M2.2:</b> Uso de simuladores contratuais e\nsuíte de testes automatizados de integração" as M2_2 <<Mitigation>>
+    rectangle "<b>M2.3:</b> Gateway de Integração com rotas,\nresiliência e Circuit Breakers" as M2_3 <<Mitigation>>
+
+    R2_1 .right.> M2_1 : Mitigado por
+    R2_2 .right.> M2_2 : Mitigado por
+    R2_3 .right.> M2_3 : Mitigado por
+}
+
+package "R3. Riscos de Qualidade, Desempenho e Operação" {
+    rectangle "<b>R3.1 - Inconsistência de Fatos na Montagem do IPS</b>\nAgregação de RACs conflitantes ou desatualizados\ngerando visão clínica incorreta ou duplicada" as R3_1 <<Risk>>
+    rectangle "<b>R3.2 - Despreparo para Falhas Operacionais</b>\nIncapacidade de diagnosticar falhas distribuídas\nou gargalos em chamadas síncronas/assíncronas" as R3_2 <<Risk>>
+
+    rectangle "<b>M3.1:</b> Regras determinísticas versionadas,\nvalidação progressiva e proveniência explícita" as M3_1 <<Mitigation>>
+    rectangle "<b>M3.2:</b> Coletor de Telemetria com rastreio\ndistribuído, métricas e logs correlacionados" as M3_2 <<Mitigation>>
+
+    R3_1 .right.> M3_1 : Mitigado por
+    R3_2 .right.> M3_2 : Mitigado por
+}
+
+package "R4. Riscos de Conformidade, Governança e Segurança" {
+    rectangle "<b>R4.1 - Vazamento ou Acesso Indevido a Dados</b>\nFalha de autenticação/autorização e\nausência de rastreabilidade de acessos" as R4_1 <<Risk>>
+    rectangle "<b>R4.2 - Não Repudiação Comprometida</b>\nEnvio ou aceite de documentos/mensagens com\nassinaturas digitais inválidas ou revogadas" as R4_2 <<Risk>>
+
+    rectangle "<b>M4.1:</b> Autenticação via Gateway (OAuth2/JWT)\ne Coletor/Repositório de Auditoria imutável" as M4_1 <<Mitigation>>
+    rectangle "<b>M4.2:</b> Serviço de Validação de Assinaturas\nDigitais com verificação de âncoras e LCRs" as M4_2 <<Mitigation>>
+
+    R4_1 .right.> M4_1 : Mitigado por
+    R4_2 .right.> M4_2 : Mitigado por
+}
+
+package "Componentes Afetados da Plataforma" {
+    [Gateway de Integração] as GW <<Component>>
+    [Montador Efêmero de IPS] as Montador <<Component>>
+    [Serviço de Validação e Terminologia] as Validador <<Component>>
+    [Adaptador FHIR-SISCAN] as Adaptador <<Component>>
+    [Serviço de Validação de Assinaturas] as Assinatura <<Component>>
+    [Coletor de Auditoria e Telemetria] as Obs <<Component>>
+}
+
+' Mapeamento de Mitigações para os Componentes do Sistema
+M1_2 --> Montador
+M2_1 --> Validador
+M2_2 --> Adaptador
+M2_3 --> GW
+M3_1 --> Montador
+M3_2 --> Obs
+M4_1 --> GW
+M4_1 --> Obs
+M4_2 --> Assinatura
+
+@enduml
