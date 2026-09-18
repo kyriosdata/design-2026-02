@@ -28,6 +28,9 @@ O foco deste repositório está exclusivamente na **especificação dos serviço
 3. **Ciclo do Medicamento:** Troca, correlação e notificação dos atos de prescrição, dispensação e administração de medicamentos entre diferentes prestadores.
 
 ---
+![Diagrama de Contexto](./docs/imagens/contexto.svg)
+
+---
 
 ## 🛠️ Arquitetura e Principais Componentes (C4 Level 2)
 
