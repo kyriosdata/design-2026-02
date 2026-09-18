@@ -37,7 +37,7 @@ Rel(operador, plataforma, "Opera, monitora e diagnostica falhas")
 Rel(plataforma, operador, "Expõe métricas, logs e alertas")
 
 ' ===================== Relacionamentos: Aplicações Clínicas <-> Plataforma =====================
-Rel(aplicacoes_clinicas, plataforma, "Envia/recebe recursos FHIR e aciona fluxos de interoperabilidade", "FHIR / HTTPS")
+Rel(aplicacoes_clinicas, plataforma, "Enviar e receber informações de Saúde")
 Rel(plataforma, aplicacoes_clinicas, "Retorna resultados, notificações e apoio à decisão", "FHIR / CDS Hooks")
 Rel(aplicacoes_clinicas, govbr, "Delegam a autenticação (AuthN) do usuário final", "OpenID Connect")
 Rel(plataforma, govbr, "Valida o token e obtém atributos de identidade autenticados", "OIDC / Introspecção de Token")
