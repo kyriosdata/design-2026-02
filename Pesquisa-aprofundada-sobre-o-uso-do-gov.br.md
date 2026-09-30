@@ -2,7 +2,7 @@
 
 
 
-**o GOV.BR autentica o paciente; a Plataforma Goiás é quem registra e emite a autorização de acesso aos dados clínicos.**
+**O GOV.BR autentica o paciente; a Plataforma Goiás é quem registra e emite a autorização de acesso aos dados clínicos.**
 
 Hoje, eu **não trataria o GOV.BR como o componente que emite a autorização clínica propriamente dita**, porque a autorização oferecida pelo Login GOV.BR refere-se ao acesso, pelo serviço integrado, aos atributos/dados disponibilizados pelo próprio ecossistema GOV.BR. A documentação define a “autorização de uso de dados” como a permissão para que determinado serviço público receba ou acesse dados pessoais de identificação ou complementares, como CPF, nome e endereço.
 
