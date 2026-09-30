@@ -26,7 +26,7 @@ O paciente recebe um comprovante e passa a ver, no MeuPEP, o histórico de quem 
 
 ## 3. Como garantir que é o estabelecimento X com o profissional Y?
 
-O acesso será concedido pelo paciente, logo, eçe ká estará ciente de qual estabelecimento esta autorizando.
+O acesso será concedido pelo paciente, logo, ele já estará ciente de qual estabelecimento esta autorizando.
 
 ## 4. Como restringir o acesso conforme o tipo de profissional?
 
