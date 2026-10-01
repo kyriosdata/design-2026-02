@@ -36,43 +36,7 @@ Essas nove responsabilidades são o ponto de partida de ambas as arquiteturas ca
 ## 4. Arquitetura Candidata 1 — menor número de contêineres, maior modularidade interna
 ![alternativa1](/docs/alternativa1-publicacaodeRac.png)
 
-```plantuml
-@startuml Publicacao_RAC_Alternativa_1
-!include https://cdn.jsdelivr.net/gh/plantuml-stdlib/C4-PlantUML/C4_Container.puml
 
-LAYOUT_WITH_LEGEND()
-
-title Diagrama de Contêineres (C4) - Publicação de RAC (Alternativa 1)
-
-Person(profissional, "Profissional de Saúde", "Registra o atendimento no PEP")
-
-System_Ext(pep, "PEP", "Prontuário Eletrônico do Paciente que produz o RAC")
-System_Ext(rnds, "RNDS", "Repositório nacional de dados em saúde")
-
-System_Boundary(plataforma, "Plataforma Nacional de Interoperabilidade em Saúde") {
-    Container(gateway, "Gateway de Integração", "API Gateway", "Autentica PEP, aplica políticas e encaminha requisições ao serviço responsável")
-    Container(servicoDocumentoRnds, "Serviço de Documento RNDS", "Orquestrador RNDS", "Valida RAC, garante idempotência, publica na RNDS e reconcilia identificadores", "Inclui módulos internos para validação de assinatura, validação FHIR estrutural e terminológica")
-    ContainerDb(dbDocumentoRnds, "Repositório local de estado RNDS", "Banco de dados", "Persiste metadados de correlação, idempotência e estado de integração com a RNDS (sem armazenar os documentos em si)")
-    Container(auditoria, "Serviço de Auditoria", "Auditoria", "Registra eventos de publicação e reconciliação")
-}
-
-Rel(profissional, pep, "Registra o atendimento")
-Rel(pep, gateway, "Publica RAC assinado", "HTTPS / FHIR")
-
-Rel(gateway, servicoDocumentoRnds, "Encaminha RAC já autenticado e autorizado", "FHIR")
-Rel(servicoDocumentoRnds, rnds, "Publica RAC validado", "Web Service RNDS")
-Rel(rnds, servicoDocumentoRnds, "Retorna identificador RNDS do documento")
-
-Rel(servicoDocumentoRnds, dbDocumentoRnds, "Persiste metadados de correlação e estado", "JDBC/SQL")
-Rel(dbDocumentoRnds, servicoDocumentoRnds, "Retorna metadados persistidos")
-
-Rel(gateway, auditoria, "Registra evento de publicação iniciada")
-Rel(servicoDocumentoRnds, auditoria, "Registra evento de publicação concluída e reconciliação de identificadores")
-
-SHOW_LEGEND()
-
-@enduml
-```
 
 Racional de agrupamento: as responsabilidades de validação (assinatura, FHIR estrutural, terminológica), idempotência, publicação e reconciliação são coesas o suficiente — todas giram em torno do mesmo documento e do mesmo ciclo de vida de publicação — para viver dentro de um único serviço, com separação apenas em nível de módulo interno. O Gateway concentra autenticação e autorização como ponto único de entrada; o banco de estado e a auditoria ficam separados porque têm natureza de persistência e retenção diferentes do processamento.
 
@@ -81,64 +45,7 @@ Essa alternativa prioriza simplicidade operacional (menos peças para implantar,
 ## 5. Arquitetura Candidata 2 — serviços mais especializados
 
 ![alternativa2](/docs//alternativa2-publicacaodeRac.png)
-```plantuml
-@startuml Publicacao_RAC_Alternativa_2
-!include https://cdn.jsdelivr.net/gh/plantuml-stdlib/C4-PlantUML/C4_Container.puml
 
-LAYOUT_WITH_LEGEND()
-
-title Diagrama de Contêineres (C4) - Publicação de RAC (Alternativa 2)
-
-Person(profissional, "Profissional de Saúde", "Registra o atendimento no PEP")
-
-System_Ext(pep, "PEP", "Prontuário Eletrônico do Paciente que produz o RAC")
-System_Ext(rnds, "RNDS", "Repositório nacional de dados em saúde")
-
-System_Boundary(plataforma, "Plataforma Nacional de Interoperabilidade em Saúde") {
-    Container(gateway, "Gateway de Integração", "API Gateway", "Autentica PEP e encaminha requisições ao serviço responsável")
-    Container(autorizacao, "Serviço de Autorização", "Autorização", "Verifica permissões do PEP para a operação solicitada")
-    Container(validacaoAssinatura, "Serviço de Validação de Assinatura", "Validação de assinatura", "Verifica integridade e validade da assinatura digital do RAC")
-    Container(validacaoFhir, "Serviço de Validação FHIR", "Validação estrutural", "Valida o RAC contra os perfis FHIR estruturais")
-    Container(validacaoTerminologica, "Serviço de Validação Terminológica", "Validação terminológica", "Valida o uso de terminologias no RAC")
-    Container(publicacaoRnds, "Serviço de Publicação RNDS", "Publicador RNDS", "Garante idempotência e publica RAC validado na RNDS")
-    ContainerDb(dbRnds, "Repositório local de estado RNDS", "Banco de dados", "Persiste metadados de correlação, idempotência e estado de integração com a RNDS (sem armazenar os documentos em si)")
-    Container(reconciliacao, "Serviço de Reconciliação de Identificadores", "Reconciliador", "Correlaciona identificador local e identificador RNDS do RAC")
-    Container(auditoria, "Serviço de Auditoria", "Auditoria", "Registra eventos de publicação e reconciliação")
-}
-
-Rel(profissional, pep, "Registra o atendimento")
-Rel(pep, gateway, "Publica RAC assinado", "HTTPS / FHIR")
-
-Rel(gateway, autorizacao, "Solicita decisão de autorização")
-Rel(autorizacao, gateway, "Retorna decisão de autorização")
-
-Rel(gateway, validacaoAssinatura, "Encaminha RAC para validação de assinatura")
-Rel(validacaoAssinatura, gateway, "Retorna resultado da validação de assinatura")
-
-Rel(gateway, validacaoFhir, "Encaminha RAC para validação estrutural FHIR")
-Rel(validacaoFhir, gateway, "Retorna resultado da validação estrutural FHIR")
-
-Rel(gateway, validacaoTerminologica, "Encaminha RAC para validação terminológica")
-Rel(validacaoTerminologica, gateway, "Retorna resultado da validação terminológica")
-
-Rel(gateway, publicacaoRnds, "Encaminha RAC validado para publicação na RNDS")
-Rel(publicacaoRnds, rnds, "Publica RAC na RNDS")
-Rel(rnds, publicacaoRnds, "Retorna identificador RNDS do RAC")
-
-Rel(publicacaoRnds, dbRnds, "Persiste metadados de correlação e estado", "JDBC/SQL")
-Rel(dbRnds, publicacaoRnds, "Retorna metadados persistidos")
-
-Rel(publicacaoRnds, reconciliacao, "Encaminha RAC publicado para reconciliação de identificadores")
-Rel(reconciliacao, publicacaoRnds, "Confirma reconciliação")
-
-Rel(gateway, auditoria, "Registra evento de publicação iniciada")
-Rel(publicacaoRnds, auditoria, "Registra evento de publicação bem-sucedida na RNDS")
-Rel(reconciliacao, auditoria, "Registra evento de reconciliação de identificadores")
-
-SHOW_LEGEND()
-
-@enduml
-```
 
 Racional de agrupamento: cada responsabilidade vira um contêiner próprio quando existe uma razão para evoluir, escalar ou substituir essa responsabilidade de forma isolada — por exemplo, a validação terminológica tende a mudar de fonte de dados e cadência de atualização de forma independente da validação de assinatura, que depende de política criptográfica e âncoras de confiança. Separar também facilita testes de contrato por responsabilidade e reduz o raio de impacto de uma falha.
 
@@ -164,45 +71,7 @@ Em nenhuma das duas alternativas o RAC em si é persistido dentro da plataforma 
 
 ![diagrama-sequencia](/docs//diagrama-de-sequencia-publicacaoRac.png)
 
-```plantuml
-@startuml Publicacao_RAC_Fluxo_Principal
-actor "Profissional de Saúde" as profissional
-participant "PEP" as pep
-participant "Gateway de Integração" as gateway
-participant "Serviço de Autorização" as autorizacao
-participant "Serviço de Validação de Assinatura" as validacaoAssinatura
-participant "Serviço de Validação FHIR" as validacaoFhir
-participant "Serviço de Validação Terminológica" as validacaoTerminologica
-participant "Serviço de Publicação RNDS" as publicacaoRnds
-database "Repositório local de estado RNDS" as dbRnds
-participant "Serviço de Reconciliação de Identificadores" as reconciliacao
-participant "RNDS" as rnds
-participant "Serviço de Auditoria" as auditoria
 
-profissional -> pep: Registra o atendimento
-pep -> gateway: Publica RAC assinado
-gateway -> autorizacao: Solicita decisão de autorização
-autorizacao -> gateway: Retorna decisão de autorização
-gateway -> validacaoAssinatura: Encaminha RAC para validação de assinatura
-validacaoAssinatura -> gateway: Retorna resultado da validação de assinatura
-gateway -> validacaoFhir: Encaminha RAC para validação estrutural FHIR
-validacaoFhir -> gateway: Retorna resultado da validação estrutural FHIR
-gateway -> validacaoTerminologica: Encaminha RAC para validação terminológica
-validacaoTerminologica -> gateway: Retorna resultado da validação terminológica
-gateway -> publicacaoRnds: Encaminha RAC validado para publicação na RNDS
-publicacaoRnds -> dbRnds: Persiste metadados de correlação e estado
-dbRnds -> publicacaoRnds: Retorna metadados persistidos
-publicacaoRnds -> rnds: Publica RAC na RNDS
-rnds -> publicacaoRnds: Retorna identificador RNDS do RAC
-publicacaoRnds -> reconciliacao: Encaminha RAC publicado para reconciliação de identificadores
-reconciliacao -> publicacaoRnds: Confirma reconciliação
-publicacaoRnds -> gateway: Confirma publicação e reconciliação
-gateway -> pep: Retorna resultado da publicação
-gateway -> auditoria: Registra evento de publicação iniciada
-publicacaoRnds -> auditoria: Registra evento de publicação bem-sucedida na RNDS
-reconciliacao -> auditoria: Registra evento de reconciliação de identificadores
-@enduml
-```
 
 ## 8. Cenários de falha percorridos em cada alternativa
 
@@ -284,38 +153,6 @@ Recorte de contêineres complementar, cobrindo o item 5 do passo 6 do encadeamen
 
 ![recorte-rnds-siscan](/docs//recorte-api-siscan.png)
 
-```plantuml
-@startuml Container_RAC_RNDS_SISCAN
-!include https://cdn.jsdelivr.net/gh/plantuml-stdlib/C4-PlantUML/C4_Container.puml
 
-LAYOUT_WITH_LEGEND()
-
-title Diagrama de Contêineres (C4) - Recorte\nIntegrações independentes com RNDS simulada e API SISCAN simulada (item 5, passo 6)
-
-System_Ext(pep, "PEP", "PEP simulado que produz e consome recursos e documentos FHIR")
-
-System_Boundary(plataforma, "Plataforma Estadual de Interoperabilidade em Saúde") {
-    Container(gateway, "Gateway de Integração", "Ponto de entrada", "Autentica, aplica políticas e encaminha a solicitação ao serviço responsável")
-    Container(servicoDocumentosRnds, "Serviço de Documentos RNDS", "Orquestrador RNDS", "Valida o documento, garante idempotência, publica na RNDS e reconcilia identificadores local/RNDS")
-    Container(adaptador, "Adaptador de Interoperabilidade FHIR-SISCAN")
-}
-
-System_Ext(rnds, "RNDS simulada", "Fonte e destino nacionais de documentos FHIR (RAC, IPS, REPM, REDFM)")
-System_Ext(siscan, "API SISCAN simulada", "Contrato nativo (JSON/REST) do Sistema de Informação do Câncer para requisição e laudo de exames")
-
-Rel(pep, gateway, "Envia e recebe recursos/documentos FHIR", "HTTPS / FHIR")
-
-Rel(gateway, servicoDocumentosRnds, "Encaminha requisição já autenticada e autorizada")
-Rel(servicoDocumentosRnds, rnds, "Publica e consulta documentos FHIR validados", "Web Service RNDS")
-Rel(rnds, servicoDocumentosRnds, "Retorna confirmação, identificador RNDS e conteúdo dos documentos")
-
-Rel(gateway, adaptador, "Encaminha ao serviço responsável pela integração SISCAN")
-Rel(adaptador, siscan, "Envia requisição/laudo já traduzido para o DTO nativo")
-Rel(siscan, adaptador, "Envia e requisita documento no DTO nativo, retorna codigoProcesso")
-
-SHOW_LEGEND()
-
-@enduml
-```
 
 Este recorte é complementar ao desenho das seções 4–10: cobre a integração de entrada (Gateway → Serviço de Documentos RNDS/Adaptador) em um nível de abstração mais alto, enquanto as seções 4–10 detalham as alternativas internas de contêineres especificamente para a responsabilidade de publicação de RAC. Nenhum dos dois substitui o outro.
