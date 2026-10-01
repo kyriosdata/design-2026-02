@@ -40,7 +40,7 @@ A plataforma adota **duas camadas complementares de identificação**, com final
 
 - **W3C Trace Context** (`traceparent`, `tracestate`) como padrão técnico de propagação.
 - **Baggage** W3C para propagar atributos de negócio leves e não sensíveis (ex.: `correlation_id`, `tenant_uf`, `patient_ref_pseudo`).
-- **`X-Correlation-ID`** como cabeçalho HTTP explícito, aceito na borda e ecoado na resposta, para compatibilidade com clientes que não implementam W3C Baggage.
+- **`X-Correlation-ID` / `correlation-id`** como cabeçalho HTTP explícito, aceito na borda (case-insensitive) e ecoado na resposta, garantindo retrocompatibilidade com clientes legados e integração direta com W3C Baggage.
 
 > **Restrição LGPD/segurança:** o `Baggage` **não** deve carregar dados pessoais identificáveis (CPF, CNS, nome). Apenas referências pseudonimizadas (ex.: hash estável do CNS) e metadados operacionais. Dados clínicos nunca trafegam em cabeçalhos de tracing.
 
@@ -86,6 +86,7 @@ Corretores de mensagem (fila/tópico) **não** herdam contexto de execução aut
 4. Em caso de *retry*, o `message_id` original é preservado; um novo `span` de tentativa é criado.
 
 > **Decisão:** adotar **links** (atributo de span) em vez de forçar a continuidade do `trace_id` quando a mensagem for reprocessada após falha. Isso evita *traces* artificialmente longos e reflete a realidade operacional (o reprocessamento é um novo evento causal, não a mesma execução).
+> 5. Em eventos encaminhados para **Dead-Letter Queue (DLQ)**, o envelope original deve ser preservado integralmente, anexando o cabeçalho `x-death-reason` e gerando um novo `span` de erro associado ao `correlation_id` original.
 
 ### 2.5 Propagação em *workers* de fundo
 
@@ -101,7 +102,7 @@ Corretores de mensagem (fila/tópico) **não** herdam contexto de execução aut
 - **Armazenamento:** *backend* compatível com OpenTelemetry (OTLP). Para a disciplina, assume-se um *collector* local + armazenamento em arquivo/objeto, sem dependência de APM comercial.
 - **Retenção:** *traces* técnicos retidos por período curto (ex.: 7 dias); `correlation_id` e eventos de domínio retidos por período compatível com auditoria clínica (a definir com a disciplina).
 - **Amostragem:** 100% em ambiente de disciplina; em produção, amostragem por cabeça com *tail sampling* para erros e fluxos críticos (ex.: montagem de IPS).
-- **Sem dados clínicos:** *spans* e atributos não devem conter conteúdo de RAC, IPS, prescrição ou laudo. Apenas referências (`Bundle.id`, `Composition.id`, `patient_ref_pseudo`).
+- - **Sem dados clínicos / PII:** *spans* e atributos não devem conter conteúdo de RAC, IPS, prescrição, laudo ou dados pessoais (CPF/CNS). Apenas referências pseudonimizadas (`Bundle.id`, `Composition.id`, `patient_ref_pseudo`). O OpenTelemetry Collector deve implementar processadores de redação (*attributesprocessor*) para mascaramento automático na borda de ingestão.
 
 ---
 
@@ -184,6 +185,7 @@ sequenceDiagram
 | 7 | RNDS / 2ª UF | Sistemas externos | `traceparent`, `correlation_id` | Dados FHIR | Autoridades sobre seus contratos |
 | 8 | Armazenamento IPS | Persistência da síntese | `correlation_id` em metadados | — | Não propaga para fora |
 | 9 | Serviço de Notificação | Notifica cliente | Envelope da mensagem | Webhook/SSE com `correlation_id` | Fecha o ciclo com o cliente |
+| 10 | Preservação de contexto em DLQs | Recompor mensagem sem cabeçalhos; descartar contexto | Garantir rastreabilidade de falhas e auditoria de mensagens não processadas | Aceita |
 
 ### 3.5 Como o rastreamento atravessa cada salto
 
@@ -262,6 +264,7 @@ O problema central — *“o worker que consome a fila não tem o contexto da re
 | Versão | Data | Autor | Descrição |
 |---|---|---|---|
 | 0.1 | — | — | Versão inicial para revisão da issue de observabilidade |
+| 0.2 | 30/09/2026 | Thâmara Cordeiro | Inclusão de regras para DLQ, sanitização no OTel Collector e normalização de cabeçalhos |
 
 ---
 
