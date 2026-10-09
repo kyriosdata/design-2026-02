@@ -1,40 +1,37 @@
-# Introdução, Visão Geral, Negócio e Requisitos da Plataforma
-
-## 1. Visão Geral e Propósito da Plataforma
-A **Plataforma Estadual de Interoperabilidade em Saúde** é uma infraestrutura de serviços de software em nível estadual projetada para integrar estabelecimentos de saúde (hospitais, postos de saúde, laboratórios e clínicas públicas ou privadas) que utilizam sistemas de prontuário heterogêneos.
-
-* **O que a Plataforma faz:** Atua como uma camada intermediária de integração que recebe, valida, padroniza e compartilha informações clínicas entre diferentes estabelecimentos de saúde, municípios, a Rede Nacional de Dados em Saúde (RNDS) e outros estados parceiros.
-* **O que ela NÃO é:** Não é um Prontuário Eletrônico (PEP), não substitui as telas onde o médico digita a consulta e não substitui os sistemas oficiais do DATASUS.
-* **Objetivo Principal:** **Garantir a continuidade do cuidado ao paciente.** A plataforma assegura que, se um paciente for atendido em uma Unidade Básica de Saúde em um município e posteriormente precisar de atendimento em um hospital de outra cidade, seu histórico médico essencial estará disponível para os profissionais de saúde.
-* **Uso Exclusivo de Dados Sintéticos:** A plataforma opera exclusivamente com dados simulados/sintéticos para validação de arquitetura, em total conformidade com as diretrizes da LGPD e garantindo privacidade absoluta.
+# Visão Geral, Negócio e Requisitos da Plataforma
 
 ---
 
-## 2. O Problema de Negócio que a Plataforma Resolve
-A plataforma responde ao desafio central da saúde pública e privada: **a fragmentação das informações clínicas**.
-
-Atualmente, cada estabelecimento de saúde opera em "ilhas de informação", utilizando sistemas isolados que não se comunicam entre si. Esse cenário resulta em exames duplicados, desconhecimento de alergias graves por parte da equipe médica, atrasos diagnósticos e riscos em atendimentos de urgência. A plataforma resolve esse problema criando uma ponte e um contrato único de comunicação entre todos esses sistemas.
-
----
-
-## 3. As Três Jornadas de Saúde Atendidas
-A atuação e os serviços da plataforma são fundamentados em 3 cenários práticos e essenciais do ecossistema de saúde:
-
-1. **Continuidade do Cuidado (RAC e IPS):**
-   - **RAC (Registro de Atendimento Clínico):** Documento padronizado gerado a cada consulta ou atendimento individualizado.
-   - **IPS (Sumário Internacional do Paciente):** Resumo clínico consolidado do paciente (alergias, medicamentos em uso e diagnósticos recentes), montado a partir de múltiplos atendimentos para consulta rápida e unificada.
-2. **Rastreamento do Câncer do Colo do Útero (SISCAN):**
-   - Intermedia a comunicação entre os postos de saúde (que solicitam os exames) e os laboratórios (que enviam os laudos), traduzindo essas informações para o sistema nacional do câncer (SISCAN).
-3. **Interoperabilidade do Ciclo do Medicamento:**
-   - Permite acompanhar e correlacionar as informações entre a receita médica (prescrição), a entrega do remédio na farmácia (dispensação) e a aplicação no paciente (administração), evitando erros ou duplicidades no tratamento.
+## 1. Visão Geral e Propósito
+* **O que é:** Trata-se de uma plataforma de interoperabilidade em saúde que **estamos desenvolvendo** para conectar e integrar diferentes sistemas (hospitais, postos de saúde, clínicas e laboratórios, sejam públicos ou privados).
+* **Objetivos Amplos:** O propósito da plataforma vai além de garantir a continuidade do atendimento individual do paciente. O seu uso é abrangente e inclui:
+  * Suporte ao planejamento e execução de **políticas públicas de saúde**.
+  * Análise de dados populacionais e vigilância epidemiológica.
+  * Gestão e tomada de decisão estratégica em saúde.
 
 ---
 
-## 4. Os Requisitos Essenciais da Plataforma
-Os requisitos definem os comportamentos e as garantias fundamentais de funcionamento que a plataforma deve assegurar:
+## 2. Problema de Negócio que Resolvemos
+* **Fragmentação das Informações:** Atualmente, os estabelecimentos de saúde operam em "ilhas de informação", com sistemas isolados que não conversam entre si.
+* **Impactos Práticos:**
+  * Solicitação e realização de exames duplicados sem necessidade.
+  * Perda ou esquecimento de histórico médico relevante durante a consulta.
+  * Riscos graves em **atendimentos de emergência** (quando um paciente chega inconsciente e a equipe não sabe suas alergias ou diagnósticos prévios).
 
-* **Padronização de Comunicação:** Toda troca de dados deve seguir o padrão internacional **HL7 FHIR R4**, garantindo que sistemas de diferentes fabricantes consigam interpretar as informações enviadas.
-* **Segurança e Proteção de Dados (LGPD):** A plataforma centraliza o controle de acesso e autorização, proibindo estritamente a exposição de dados pessoais ou clínicos em logs e registros operacionais.
-* **Rastreabilidade de Informações:** Capacidade de acompanhar o ciclo de vida e a trajetória de cada solicitação, identificando com precisão a origem e o destino do dado enviado.
-* **Garantia de Não Duplicação (Idempotência):** Mecanismos para reconhecer reenvios de dados causados por oscilações na rede, impedindo que a ficha ou histórico do paciente seja duplicado.
-* **Informação Temporária e Atualizada:** Sínteses e resumos clínicos (como o IPS) possuem tempo de retenção temporário, garantindo que o médico consulte sempre dados atualizados e sem acúmulo desnecessário de armazenamento.
+---
+
+## 3. Possibilidades de Integração e Uso na Prática
+* **Flexibilidade da Plataforma:** A arquitetura que estamos projetando é genérica e modular, permitindo suportar **múltiplas possibilidades de uso e fluxos de dados**.
+* **Exemplos de Aplicação (Apenas exemplos de cenários):**
+  * Troca de registros de atendimentos clínicos (como as RACs) ou resumos de histórico (como o IPS) — ressaltando que **são apenas exemplos de casos de uso**, e não o limite da plataforma.
+  * Comunicação com sistemas de rastreamento de exames e agravos de saúde.
+  * Acompanhamento do ciclo de vida da prescrição médica e dispensa de medicamentos.
+
+---
+
+## 4. Requisitos Essenciais
+* **Linguagem Padronizada:** A plataforma utiliza um **padrão internacional de saúde** para permitir a comunicação fluida entre sistemas heterogêneos.
+* **Segurança e Privacidade:** Proteção e controle rigoroso dos dados sensíveis e pessoais, garantindo conformidade com a legislação vigente.
+* **Rastreabilidade:** Capacidade de acompanhar todo o percurso da informação (entrada, processamento e saída).
+* **Garantia de Não-Duplicidade:** Tratamento de falhas ou oscilações de rede para evitar duplicação inadvertida de registros.
+* **Permanência Temporária:** Tratamento das informações em trânsito com permanência temporária para assegurar dados sempre sincronizados e atualizados.
