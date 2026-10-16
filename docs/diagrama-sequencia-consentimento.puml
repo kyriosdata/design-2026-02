@@ -1,0 +1,45 @@
+@startuml
+autonumber
+skinparam style strictuml
+skinparam SequenceMessageAlign center
+
+actor "Médico / Estabelecimento" as Medico
+participant "Plataforma" as Plataforma
+participant "App Meu PEP" as MeuPEP
+actor "Paciente" as Paciente
+
+Medico -> Plataforma : (1) Pede autorização / Solicita dados
+activate Medico
+activate Plataforma
+
+Plataforma -> MeuPEP : (2) Envia pedido de consentimento
+activate MeuPEP
+
+MeuPEP -> Paciente : Exibe notificação de pedido de acesso
+activate Paciente
+
+group (3.1) Obter Histórico [Opcional / Consulta prévia ou pós-decisão]
+    Paciente -> MeuPEP : Solicita visualização do histórico
+    MeuPEP -> Plataforma : (3.1) Obter histórico ( clínicos / acessos )
+    Plataforma --> MeuPEP : Retorna histórico
+    MeuPEP --> Paciente : Apresenta histórico no ecrã
+end
+
+alt Consentimento Autorizado (3. Sim)
+    Paciente --> MeuPEP : Autoriza partilha de dados
+    MeuPEP --> Plataforma : (3) Retorna Consentimento (Sim)
+    Plataforma --> Medico : Notifica autorização concedida
+    
+    Medico -> Plataforma : (4) Pedido de Acesso aos dados clínicos
+    Plataforma --> Medico : Disponibiliza informações do paciente
+else Consentimento Negado (3. Não)
+    Paciente --> MeuPEP : Recusa partilha de dados
+    deactivate Paciente
+    MeuPEP --> Plataforma : (3) Retorna Consentimento (Não)
+    deactivate MeuPEP
+    Plataforma --> Medico : Notifica recusa de acesso
+    deactivate Plataforma
+    deactivate Medico
+end
+
+@enduml
