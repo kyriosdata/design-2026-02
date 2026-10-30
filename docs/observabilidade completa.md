@@ -2024,4 +2024,142 @@ A implementação deverá ser considerada verificada quando houver evidências r
 | ID | Critério |
 |---|---|
 | CA10 | Dados pessoais e conteúdo clínico integral não aparecem na telemetria. |
-| CA11 | Credenciais, tokens e segredos não são export
+| CA11 | Credenciais, tokens e segredos não são exportados. |
+| CA12 | Métricas não utilizam identificadores de alta cardinalidade. |
+| CA13 | A infraestrutura de telemetria possui acesso restrito. |
+| CA14 | Auditoria e observabilidade possuem fluxos e repositórios independentes. |
+
+## 22.3. Critérios de resiliência
+
+| ID | Critério |
+|---|---|
+| CA15 | A indisponibilidade do Collector não bloqueia operações de negócio. |
+| CA16 | A indisponibilidade do Repositório de Telemetria não altera o estado dos recursos FHIR. |
+| CA17 | Os descartes de telemetria são contabilizados. |
+| CA18 | A recuperação da infraestrutura permite retomar a exportação dos sinais disponíveis. |
+
+## 22.4. Critérios de operação e testes
+
+| ID | Critério |
+|---|---|
+| CA19 | Os sinais são recebidos pelo Collector e persistidos no repositório. |
+| CA20 | As métricas permitem identificar falhas de coleta e processamento. |
+| CA21 | Os alertas operacionais são avaliados conforme regras configuradas. |
+| CA22 | Os testes automatizados comprovam propagação, sanitização e resiliência. |
+| CA23 | As políticas de retenção e amostragem estão documentadas. |
+| CA24 | As decisões técnicas e pendências estão registradas. |
+
+Cada critério deverá possuir evidência de teste, registro de resultado ou demonstração técnica.
+
+Testes não executados não poderão ser considerados aprovados.
+
+# 23. Decisões técnicas pendentes
+
+As seguintes decisões deverão ser deliberadas antes da implementação definitiva dos respectivos mecanismos.
+
+| ID | Decisão pendente | Justificativa |
+|---|---|---|
+| P01 | Fixar versões compatíveis de Java, Spring Boot, HAPI FHIR, OpenTelemetry e Collector. | Compatibilidade da infraestrutura. |
+| P02 | Escolher a tecnologia do Repositório de Telemetria. | Definir armazenamento, consulta e operação. |
+| P03 | Confirmar retenção de traces, logs e métricas por ambiente. | Privacidade, custo e requisitos operacionais. |
+| P04 | Definir retenção de `correlation_id` e eventos de negócio. | Necessidade de correlação após expiração dos traces. |
+| P05 | Definir política de amostragem de produção. | Volume e criticidade das operações. |
+| P06 | Definir a estratégia de propagação W3C entre instâncias estaduais. | Contrato federado entre UFs. |
+| P07 | Confirmar a propagação de contexto nas integrações RNDS. | Dependência do contrato externo. |
+| P08 | Definir a propagação de contexto no simulador SISCAN. | Compatibilidade do contrato de integração. |
+| P09 | Definir correlação de eventos de medicamentos entre organizações. | Eventos distribuídos e fora de ordem. |
+| P10 | Definir tratamento definitivo de mensagens legadas sem contexto. | Compatibilidade e rastreabilidade. |
+| P11 | Aprovar eventual utilização de `patient_ref_pseudo`. | Necessidade e proteção de dados. |
+| P12 | Fixar nomenclatura de spans customizados. | Padronização entre serviços. |
+| P13 | Definir limites e prioridades das regras de alertas. | Ausência de linha de base operacional. |
+| P14 | Definir os parâmetros definitivos da infraestrutura de coleta. | Memória, filas, lotes e retentativas. |
+| P15 | Confirmar o armazenamento do contexto de correlação nos metadados das sessões IPS. | Preservação da correlação entre requisições independentes. |
+| P16 | Definir a política de Span Links para a Outbox e demais operações assíncronas. | Preservação da causalidade técnica. |
+| P17 | Confirmar a política de resposta com `traceparent`. | Contrato de comunicação HTTP. |
+| P18 | Definir os critérios de desempenho e disponibilidade. | Configuração dos alertas e avaliação operacional. |
+
+As decisões arquiteturalmente significativas deverão ser registradas por meio de ADR, conforme a governança do projeto.
+
+# 24. Diretrizes de implementação
+
+A implementação deverá seguir uma sequência incremental.
+
+## 24.1. Primeiro estágio — Base de instrumentação
+
+- Criar biblioteca ou Starter compartilhado.
+- Configurar OpenTelemetry SDK.
+- Definir atributos de serviço.
+- Implementar propagação W3C.
+- Implementar geração de `correlation_id`.
+- Implementar sanitização na aplicação.
+
+## 24.2. Segundo estágio — Instrumentação dos serviços
+
+- Instrumentar Gateway.
+- Instrumentar Servidor FHIR.
+- Instrumentar serviços de validação.
+- Instrumentar serviços de interoperabilidade.
+- Instrumentar Montador IPS.
+- Instrumentar Serviços de Eventos e Subscriptions.
+- Instrumentar demais contêineres internos.
+
+## 24.3. Terceiro estágio — Infraestrutura de telemetria
+
+- Configurar OpenTelemetry Collector.
+- Configurar receptores OTLP.
+- Configurar processadores.
+- Configurar exportadores.
+- Configurar Repositório de Telemetria.
+- Configurar políticas de retenção.
+
+## 24.4. Quarto estágio — Operações assíncronas
+
+- Implementar propagação no envelope.
+- Implementar Context Storage.
+- Instrumentar Outbox.
+- Instrumentar despachantes.
+- Implementar Span Links.
+- Instrumentar retentativas e DLQ.
+
+## 24.5. Quinto estágio — Segurança e resiliência
+
+- Executar testes de privacidade.
+- Executar testes de indisponibilidade.
+- Validar limites de memória.
+- Validar descartes.
+- Validar recuperação.
+- Verificar separação entre auditoria e telemetria.
+
+## 24.6. Sexto estágio — Alertas e aceitação
+
+- Definir regras de alertas.
+- Validar métricas.
+- Validar consultas por `trace_id`.
+- Validar consultas por `correlation_id`.
+- Executar testes ponta a ponta.
+- Registrar evidências dos critérios de aceitação.
+
+A sequência representa uma proposta de implementação. A priorização e os marcos deverão respeitar a governança do projeto.
+
+# 25. Referências técnicas
+
+## 25.1. Referências internas
+
+- [Repositório da Plataforma Goiás](https://github.com/kyriosdata/design-2026-02)
+- [Requisitos originais de observabilidade](https://github.com/kyriosdata/design-2026-02/blob/main/docs/observabilidade.md)
+- [Proposta de arquitetura da Plataforma Goiás](https://github.com/kyriosdata/design-2026-02/blob/main/docs/pratica.md)
+- [Diagrama de contexto](https://github.com/kyriosdata/design-2026-02/blob/main/docs/imagens/contexto.svg)
+
+## 25.2. Referências técnicas
+
+- [OpenTelemetry](https://opentelemetry.io/docs/)
+- [OpenTelemetry Collector](https://opentelemetry.io/docs/collector/)
+- [OpenTelemetry Semantic Conventions](https://opentelemetry.io/docs/specs/semconv/)
+- [OpenTelemetry Java](https://opentelemetry.io/docs/languages/java/)
+- [W3C Trace Context](https://www.w3.org/TR/trace-context/)
+- [W3C Baggage](https://www.w3.org/TR/baggage/)
+- [OpenTelemetry Specification](https://opentelemetry.io/docs/specs/)
+
+---
+
+**Fim da especificação de design de software de observabilidade da Plataforma Goiás.**
