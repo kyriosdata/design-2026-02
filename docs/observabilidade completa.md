@@ -77,6 +77,23 @@ As decisões já estabelecidas no repositório devem ser preservadas.
 
 As especificações adicionais deste documento representam propostas de detalhamento de implementação e deverão ser submetidas à revisão arquitetural quando envolverem decisões ainda não aprovadas.
 
+### 3.1. Decisões técnicas herdadas
+
+Esta especificação preserva as decisões técnicas registradas em `docs/observabilidade.md`. O detalhamento de implementação não deverá alterar silenciosamente essas decisões.
+
+| ID | Decisão | Diretriz a preservar | Status |
+|---|---|---|---|
+| D1 | Padrão de rastreamento técnico | Adotar W3C Trace Context, utilizando `traceparent` e `tracestate`. | Aceita |
+| D2 | Modelo de correlação | Manter `correlation_id` de negócio separado de `trace_id` e `span_id`. | Aceita |
+| D3 | Propagação em mensageria | Transportar os metadados de correlação no envelope da mensagem, nunca no corpo clínico FHIR. | Aceita |
+| D4 | Reprocessamento assíncrono | Utilizar links para relacionar rastros técnicos distintos, evitando continuidade artificial do mesmo trace em reprocessamentos. | Aceita |
+| D5 | Proteção de dados | Não transportar dados pessoais identificáveis em cabeçalhos ou Baggage. Utilizar apenas referências pseudonimizadas e metadados operacionais permitidos. | Aceita |
+| D6 | Amostragem | Utilizar amostragem integral (100%) no ambiente da disciplina e considerar head sampling combinado com tail sampling para erros e fluxos críticos em produção. | Provisória para produção |
+| D7 | Armazenamento na disciplina | Utilizar backend compatível com OTLP, com Collector local e armazenamento em arquivo ou objeto, sem dependência de APM comercial. | Aceita para a disciplina |
+| D8 | Fluxo distribuído de referência | Utilizar a montagem de IPS sob demanda como exemplo principal de rastreamento ponta a ponta. | Aceita |
+
+**Regra de governança:** as decisões aceitas devem ser preservadas. Alterações deverão apresentar justificativa, alternativas e consequências, sendo submetidas à aprovação conjunta quando envolverem decisões arquiteturalmente significativas. As decisões provisórias deverão permanecer identificadas até sua validação.
+
 ## 4. Conceitos fundamentais de observabilidade
 
 A observabilidade será estruturada sobre três tipos principais de informações.
