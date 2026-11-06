@@ -1,0 +1,19 @@
+@startuml 02-sequencia-balcao
+title Prescrição, retirada no balcão e administração
+autonumber
+skinparam responseMessageBelowArrow true
+
+participant "PEP do prescritor" as PR
+participant "Farmácia (balcão)" as FA
+participant "PEP do hospital" as HO
+participant "Serviço de Medicamentos" as MED
+
+PR -> MED : registra prescrição (21 cápsulas)
+MED --> PR : prescrição ativa
+FA -> MED : registra dispensação de 10 cápsulas
+MED -> MED : confere a prescrição e o saldo
+MED --> FA : ok, saldo restante = 11
+HO -> MED : registra dose administrada
+MED --> HO : ok, ligada à prescrição
+
+@enduml

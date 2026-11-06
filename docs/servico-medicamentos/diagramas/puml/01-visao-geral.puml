@@ -1,0 +1,28 @@
+@startuml 01-visao-geral
+!include <C4/C4_Container>
+
+title Serviço de Medicamentos — Visão geral (C4)
+
+LAYOUT_LEFT_RIGHT()
+
+System_Ext(pep, "PEP do prescritor", "Prescreve ou cancela")
+System_Ext(farm, "App da farmácia e do entregador", "Dispensa no balcão ou vende com entrega")
+System_Ext(hosp, "PEP do hospital / PA", "Registra doses administradas")
+System_Ext(meupep, "MeuPEP", "Prontuário do paciente (SES-GO / Expresso)")
+
+System_Boundary(plat, "Plataforma estadual") {
+    Container(gw, "Gateway", "", "Autentica e autoriza")
+    Container(med, "Serviço de Medicamentos", "", "Valida, correlaciona, controla o saldo e conduz a entrega")
+    ContainerDb(fhir, "Servidor FHIR", "", "Registros clínicos")
+    Container(sig, "Validação de assinaturas", "", "Confere a assinatura do paciente")
+}
+
+Rel(pep, gw, "chama")
+Rel(farm, gw, "chama")
+Rel(hosp, gw, "chama")
+Rel(meupep, gw, "chama")
+Rel(gw, med, "encaminha")
+Rel(med, fhir, "grava e consulta")
+Rel(med, sig, "valida assinatura")
+
+@enduml
