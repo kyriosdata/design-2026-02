@@ -1,0 +1,23 @@
+@startuml 05-estados-entrega
+title Estados da entrega
+hide empty description
+
+state "Aguardando autorização" as autorizacao
+state "Em rota" as rota
+state "Aguardando assinatura" as assinatura
+state "Confirmada" as confirmada
+state "Negada" as negada
+state "Não entregue" as naoentregue
+
+[*] --> autorizacao : farmácia pede a receita
+autorizacao --> rota : paciente autoriza\n(reserva o saldo)
+autorizacao --> negada : paciente nega
+rota --> assinatura : entregador mostra o QR
+assinatura --> confirmada : assinatura válida
+assinatura --> naoentregue : prazo expirou
+rota --> naoentregue : ausente, recusa\nou receita cancelada
+confirmada --> [*]
+negada --> [*]
+naoentregue --> [*]
+
+@enduml

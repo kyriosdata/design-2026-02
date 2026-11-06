@@ -1,0 +1,13 @@
+@startuml 04-sequencia-uso-informado
+title Paciente informa que tomou
+autonumber
+skinparam responseMessageBelowArrow true
+
+actor "Paciente (MeuPEP)" as PA
+participant "Serviço de Medicamentos" as MED
+
+PA -> MED : "tomei a dose das 8h"
+MED -> MED : confere que a prescrição é do próprio paciente
+MED --> PA : uso registrado como "informado pelo paciente"
+
+@enduml

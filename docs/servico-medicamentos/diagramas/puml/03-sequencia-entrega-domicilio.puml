@@ -1,0 +1,31 @@
+@startuml 03-sequencia-entrega-domicilio
+title Compra com entrega em casa e assinatura no MeuPEP
+autonumber
+skinparam responseMessageBelowArrow true
+
+actor "Paciente (MeuPEP)" as PA
+participant "App da farmácia / entregador" as FA
+participant "Serviço de Medicamentos" as MED
+participant "Validação de assinaturas" as SIG
+
+note over PA, FA
+  O paciente compra no app da farmácia
+  (preço e pagamento ficam com a farmácia)
+end note
+FA -> MED : pede acesso à prescrição do paciente
+MED -> PA : pedido de autorização no MeuPEP
+PA -> MED : autoriza esta farmácia
+MED --> FA : prescrição liberada
+FA -> MED : inicia entrega de 11 cápsulas
+MED -> MED : confere o saldo e reserva 11
+MED --> FA : código único da entrega (QR)
+note over PA, FA : Na porta, o entregador mostra o QR
+PA -> PA : lê o QR e assina o recebimento
+PA -> MED : envia a confirmação assinada
+MED -> SIG : valida a assinatura
+SIG --> MED : válida
+MED -> MED : conclui a dispensação e baixa o saldo
+MED --> FA : entrega confirmada
+MED --> PA : recebimento registrado
+
+@enduml
