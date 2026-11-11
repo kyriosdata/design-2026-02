@@ -39,7 +39,7 @@ O Montador **não muda**: continua sem selecionar fatos, sem resolver conflitos 
 11. Chama `$finalize` e recebe o `Bundle` validado, com hash.
 12. Grava o `Bundle` no cache (TTL curto) e registra a evidência no Arquivo, com a referência da concessão e o estabelecimento.
 13. Devolve o `Bundle` ao Gateway, que o entrega ao PEP.
-14. Se o cliente pedir envio a outra UF, o Despachante lê o `Bundle` do cache, entrega pelo Gateway ao Gateway da plataforma par, e grava o recibo no Arquivo. O consentimento do paciente para esse envio é questão em aberto (seção 1.6).
+14. Se o cliente pedir envio a outra UF, o Despachante lê o `Bundle` do cache, entrega pelo Gateway ao Gateway da plataforma par, e grava o recibo no Arquivo. O consentimento do paciente para esse envio é questão em aberto.
 
 Resultados possíveis para o PEP: `Bundle` (IPS), `OperationOutcome` com pendências, ou recusa (`403`) por estabelecimento não cadastrado ou concessão inválida. A resposta de recusa não revela qual das duas causas ocorreu além do necessário para o atendimento (a definir).
 
@@ -127,77 +127,9 @@ O pedido não recebe identificador de paciente do PEP. A geração, a validaçã
 | Latência | Não se aplica | Baixa | Alta (montagem na hora) |
 | Componentes novos | Arquivo de evidência | Arquivo, Síntese, curadoria, chaves | Síntese, cache, evidência, Despachante |
 
-## 1.6 Riscos e contraponto
-
-Cada risco aponta a hipótese da seção 1.7 que o verifica, quando existe. Os tratamentos são propostas, não decisões da equipe.
-
-### 1.6.1 Geração do IPS
-
-| Risco | Por que importa | Tratamento proposto | Hipótese |
-| --- | --- | --- | --- |
-| **R1. A política de seleção é curadoria clínica automática com outro nome** | Política simples erra em casos limite; política sofisticada vira regra clínica inventada (risco já nomeado na seção 26 da proposta) | Limitar a regras verificáveis por exemplos oficiais e mandar o resto para decisão humana | H5 |
-| **R2. O cache pode devolver IPS defasado** | Se chegar um RAC novo durante o TTL, o `Bundle` em cache deixa de ser a síntese mais atual, e a alternativa C reproduz o perigo clínico da B em escala menor | Chave do cache com paciente, versão da política, versão do pacote e hash do manifesto; invalidação por evento de novo RAC; `generatedAt` sempre na resposta | H7, H6 |
-| **R3. A taxa de conflito sem regra pode ser alta** | O resultado comum passa a ser "não foi possível gerar", o que enfraquece a promessa "qual é o IPS do paciente X?" | Medir em dados sintéticos realistas antes de investir em mais regras | H5 |
-| **R4. A latência da montagem pode inviabilizar o uso no ponto de cuidado** | A montagem acontece a cada pedido, com o profissional esperando | Só a medição em protótipo decide | H4 |
-
-### 1.6.2 Acesso por QR code
-
-| Risco | Por que importa | Tratamento proposto | Hipótese |
-| --- | --- | --- | --- |
-| **R5. O QR code é uma credencial ao portador** | Quem fotografar ou interceptar o QR antes do uso pode tentar usá-lo, embora só estabelecimento cadastrado seja aceito | Prazo curto, uso único, escopo só IPS, QR rotativo e vínculo da concessão ao estabelecimento que a leu; a recusa por concessão já usada fica visível ao paciente no histórico de acessos do MeuPEP | H8, H10 |
-| **R6. "Estabelecimento cadastrado" não tem fonte nem critério** | Pode ser CNES simulado, cadastro próprio da plataforma ou habilitação por finalidade; sem definição, a verificação do Gateway não é testável | Decidir a fonte em conjunto; recusar o estabelecimento descadastrado no momento do pedido, não na emissão do QR | H8 |
-| **R7. O fluxo depende do celular e da conta GOV.BR do paciente** | Sem celular com o MeuPEP ou conta de nível adequado (emergência, paciente inconsciente), o fluxo não funciona | O acesso emergencial da proposta de autorização fica fora deste recorte; registrar a limitação | Sem hipótese |
-| **R8. O consentimento cobre só a leitura pela clínica** | O envio a outra UF pelo Despachante é um segundo uso: precisa de consentimento próprio ou de decisão explícita de que a concessão o cobre | Decidir em conjunto; no protótipo, simular a concessão com dados sintéticos, pois o consentimento dinâmico completo está fora do escopo (`pratica.md`) | Sem hipótese |
-
-### 1.6.3 Opção B (clínica em outra UF)
-
-| Risco | Por que importa | Tratamento proposto | Hipótese |
-| --- | --- | --- | --- |
-| **R9. A confiança no cadastro do par não está definida** | Se a UF de origem aceitar o estabelecimento só porque a UF visitada o declarou cadastrado, transfere a confiança a outra UF; se verificar por conta própria, exige um cadastro compartilhado | Decidir no contrato federado, com ADR | H12 |
-| **R10. O QR revela a UF emissora** | O identificador da UF informa onde o paciente tem cadastro: pouco sensível, mas não anônimo | Aceitar o risco ou usar só uma referência que a UF visitada resolva por um serviço de descoberta; a equipe decide | Sem hipótese |
-| **R11. Latência e disponibilidade em dois saltos** | O tempo soma a ida e a volta entre UFs e a montagem na UF de origem, e a falha de uma UF afeta o atendimento na outra | Definir tempo limite e erro explícito no contrato federado; medir com duas plataformas simuladas | H4, H12 |
-| **R12. Retenção e rastros nas duas UFs** | A UF visitada recebe conteúdo clínico e pode retê-lo; a base legal do lado da clínica não está definida | A UF visitada não retém o `Bundle` e registra só o hash; cada UF gera `AuditEvent` e evidência com identificador de correlação que não identifique o paciente; base legal e retenção entram no contrato federado | H11 |
-
-### 1.6.4 Entrega e escopo
-
-| Risco | Por que importa | Tratamento proposto | Hipótese |
-| --- | --- | --- | --- |
-| **R13. O que a UF destinatária faz depois da entrega não é controlado** | A evidência prova o que foi enviado, não a retenção do outro lado | A retenção do destinatário entra no contrato federado | H1 |
-| **R14. O escopo da alternativa C é grande** | Ela soma Serviço de Síntese, cache, Arquivo e Despachante, além de MeuPEP e cadastro | Recorte mínimo do protótipo: MeuPEP simulado (emite a concessão e o QR), verificação de estabelecimento cadastrado no Gateway, Síntese, Montador, Arquivo com `$verify` e um envio a uma plataforma par simulada; a opção B acrescenta uma segunda plataforma simulada (UF visitada) só com Gateway, cadastro e cliente federado | Sem hipótese |
-
-## 1.7 Hipóteses a verificar nos protótipos
-
-Uma verificação não executada permanece pendente, nunca registrada como atendida (seção 24.5 da proposta).
-
-### 1.7.1 Geração e evidência
-
-| Hipótese | Risco | Como verificar | Critério | Estado |
-| --- | --- | --- | --- | --- |
-| **H1.** A evidência prova a entrega sem reter conteúdo clínico | R13 | Gerar IPS sintético, enviar à UF par simulada, confirmar o recibo e eliminar o `Bundle` | `$verify` confirma o hash; nenhum conteúdo clínico em logs, métricas e rastros | Pendente |
-| **H4.** A montagem sob demanda tem latência aceitável | R4, R11 | Medir com 2 ou mais RACs, laudo e medicamento; na opção B, repetir com duas plataformas simuladas e medir o salto federado à parte | Limite a definir com a equipe | Pendente |
-| **H5.** A política resolve a maioria dos casos sem curadoria | R1, R3 | Medir a taxa de conflito sem regra em dados sintéticos realistas | Taxa a definir com a equipe | Pendente |
-| **H6.** O RAC substituído após a geração é detectável | R2 | Substituir um RAC já usado como fonte (incidente 13 da seção 21) | A evidência identifica os IPS afetados por RAC e versão | Pendente |
-| **H7.** O cache não serve IPS defasado | R2 | Publicar RAC novo durante o TTL e pedir o IPS | A resposta reflete o RAC novo ou sinaliza a defasagem | Pendente |
-
-### 1.7.2 Acesso por QR code
-
-| Hipótese | Risco | Como verificar | Critério | Estado |
-| --- | --- | --- | --- | --- |
-| **H8.** Só estabelecimento cadastrado com concessão válida acessa o IPS | R5, R6 | Testar estabelecimento não cadastrado, cadastrado e descadastrado, e concessão válida, expirada, revogada, já usada e de outro escopo | Todo caso inválido recebe recusa, não lê o Servidor FHIR e gera `AuditEvent`; o caso válido devolve o `Bundle` | Pendente |
-| **H9.** O QR e os rastros não expõem dado do paciente | R5 | Inspecionar o conteúdo do QR, logs, métricas e rastros em um fluxo completo com dados sintéticos | Nenhum identificador de paciente, token ou conteúdo clínico no QR, nos logs e nos rastros | Pendente |
-| **H10.** O QR de uso único funciona no ponto de cuidado | R5 | Medir o tempo da leitura até a resposta, incluindo a validação da concessão, e repetir a leitura do mesmo QR | Tempo a definir com a equipe; a segunda leitura é recusada | Pendente |
-
-### 1.7.3 Opção B
-
-| Hipótese | Risco | Como verificar | Critério | Estado |
-| --- | --- | --- | --- | --- |
-| **H11.** O acesso de outra UF entrega o IPS sem a UF visitada reter conteúdo clínico | R12 | Com duas plataformas simuladas, ler na clínica da UF visitada o QR emitido pela UF de origem | O PEP recebe o `Bundle`; a UF visitada não tem `Bundle` em cache, Arquivo, logs ou rastros, só o hash; a evidência da UF de origem identifica o estabelecimento e a UF visitada | Pendente |
-| **H12.** A opção B recusa e falha de forma explícita | R9, R11 | Testar estabelecimento não cadastrado na UF visitada, par não habilitado, concessão inválida, concessão usada e UF de origem fora do ar | Cada caso recebe `403` ou erro explícito, nunca "sem IPS"; nenhuma leitura de fatos na UF de origem nos casos de recusa | Pendente |
-
-
 # Parte 2. Como montar o Montador Efêmero
 
-## 2.8 Seções do IPS Brasil
+## Seções do IPS Brasil
 
 Fonte: [perfil CompositionBRIPS publicado](https://hl7.org.br/fhir/ips/StructureDefinition-CompositionBRIPS.html), consultado em 21 de outubro de 2026. O perfil define 3 seções obrigatórias e 11 opcionais, todas com código LOINC fixo.
 
