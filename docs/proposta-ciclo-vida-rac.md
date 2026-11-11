@@ -50,59 +50,7 @@ Ser sistema de registro do documento não é ser autoridade sobre o seu conteúd
 
 Java, Spring Boot e HAPI FHIR são decisões fixadas no projeto. PostgreSQL e os demais produtos são proposta a ratificar, junto com as versões.
 
-```plantuml
-@startuml RAC_Conteineres
-!include https://cdn.jsdelivr.net/gh/plantuml-stdlib/C4-PlantUML/C4_Container.puml
-
-LAYOUT_WITH_LEGEND()
-
-title Diagrama de conteineres - ciclo do RAC
-
-System_Ext(pep, "1 - Aplicacao Clinica / PEP", "Produz e submete o Bundle assinado")
-
-System_Boundary(plataforma, "Plataforma Estadual de Interoperabilidade em Saude") {
-    Container(gtw, "2 - Gateway de Integracao", "Spring Cloud Gateway", "Autentica a aplicacao, aplica limites e encaminha")
-    Container(authz, "3 - Servidor AuthZ", "Spring Boot, OAuth2", "Decide por organizacao, finalidade e contexto de paciente")
-    Container(reg, "4 - Registro Documental", "Spring Boot", "Dono do ciclo: valida, registra e vincula correcoes")
-    Container(val, "5 - Validacao e Terminologia", "HAPI FHIR Validator", "Valida contra o perfil RAC fixado")
-    Container(asd, "5 - Validacao de Assinaturas", "ICP-Brasil, CRL e OCSP", "Verifica integridade, cadeia e revogacao")
-    ContainerDb(repo, "6 - Repositorio de Documentos", "PostgreSQL", "Bundle em JSONB por versao, relacoes e caixa de saida")
-    Container(proj, "7 - Projetor de Recursos", "Spring Boot", "Deriva os recursos do documento registrado")
-    Container(pub, "7 - Publicacao RNDS", "Spring Boot", "Distribui a RNDS e reconcilia identificadores")
-    ContainerDb(srv, "8 - Servidor FHIR R4", "HAPI FHIR, PostgreSQL", "Projecao consultavel: busca, medidas e apoio a decisao")
-    ContainerDb(aud, "Trilha de Auditoria", "PostgreSQL, somente acrescimo", "Transversal a todos os conteineres")
-}
-
-System_Ext(rnds, "8 - RNDS Simulada", "Destino nacional de distribuicao")
-
-Rel(pep, gtw, "Submete o RAC assinado e consulta", "HTTPS / FHIR R4")
-Rel(gtw, authz, "Solicita decisao de autorizacao", "HTTPS")
-Rel(gtw, reg, "Encaminha a operacao autorizada", "FHIR")
-Rel(reg, val, "Valida perfil e terminologia", "FHIR")
-Rel(reg, asd, "Valida a assinatura", "HTTPS")
-Rel(reg, repo, "Registra versao e grava o evento na caixa de saida", "SQL")
-Rel(repo, proj, "Entrega evento de documento registrado", "Caixa de saida")
-Rel(repo, pub, "Entrega evento de documento registrado", "Caixa de saida")
-Rel(proj, srv, "Materializa os recursos derivados", "FHIR")
-Rel(pub, rnds, "Publica, substitui e solicita retirada", "Web Service RNDS")
-Rel(rnds, pub, "Devolve identificador RNDS e confirmacao", "Web Service RNDS")
-Rel(reg, aud, "Registra operacoes e entrega de copia", "Evento")
-
-note right of repo
-  Fonte da verdade. Conteudo imutavel
-  por versao; correcao gera documento
-  novo, vinculado ao original.
-end note
-
-note right of srv
-  Projecao derivada, reconstruivel a
-  partir do repositorio. Em divergencia,
-  o documento vence.
-end note
-
-SHOW_LEGEND()
-@enduml
-```
+![Diagrama de contêineres do ciclo do RAC](./imagens/im1-diagrama-cdv-rac.png)
 
 ## 4. Os oito passos do registro
 
@@ -159,40 +107,8 @@ Vale para qualquer documento registrado, inclusive para um adendo. Nenhum estado
 
 Invalidado não oculta. Decisões podem ter sido tomadas com base no documento, e suprimi-lo da leitura equivaleria a ocultar um registro. Exclusão física permanece possível apenas por determinação legal específica, como caso excepcional fora deste ciclo, com a remoção e seu fundamento registrados na trilha.
 
-```plantuml
-@startuml RAC_Ciclo_Documento
-title Ciclo de vida de um documento na plataforma
+![Ciclo de vida de um documento registrado na plataforma](./imagens/im2-diagrama-estados-rac.png)
 
-state "Produzido" as produzido
-state "Submetido" as submetido
-state "Rejeitado" as rejeitado
-state "Registrado" as registrado
-state "Superado" as superado
-state "Invalidado" as invalidado
-
-[*] --> produzido : atendimento, ou decisao de corrigir\n(PEP, fora da fronteira)
-produzido --> submetido : envio a plataforma\n(Gateway de Integracao)
-submetido --> rejeitado : assinatura, conteudo ou\nelementos da correcao recusados
-submetido --> registrado : validado e persistido
-registrado --> registrado : leitura, ou recebimento de adendo;\nsegue vigente
-registrado --> superado : retificacao assinada e justificada
-registrado --> invalidado : retratacao assinada e justificada
-superado --> invalidado : retratacao alcanca a versao anterior
-rejeitado --> [*]
-
-note right of registrado
-  Receber adendo nao tira o documento
-  deste estado. Ele segue vigente e
-  passa a ser lido junto com o adendo.
-end note
-
-note right of invalidado
-  Permanece visivel na linha do tempo,
-  marcado como registrado por engano.
-end note
-
-@enduml
-```
 
 ## 7. Distribuição
 
