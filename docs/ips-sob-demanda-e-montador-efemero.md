@@ -5,6 +5,9 @@
 
 **"qual é o IPS do paciente X?"** gerando o documento **no momento do pedido**, sem repositório longitudinal.
 
+O pedido nasce **no celular do paciente**: o paciente gera um **QR code** no MeuPEP, o estabelecimento o lê e, **se estiver cadastrado**, acessa o IPS. Sem QR válido, ou com estabelecimento não cadastrado, nada é lido nem montado. O MeuPEP e o consentimento seguem a [proposta de autorização com GOV.BR](autorizacao-acesso-govbr-respostas.md), que continua sendo alternativa em avaliação e não requisito aprovado (`pratica.md`, seção 25).
+
+- O **QR code** carrega só uma **referência opaca a uma concessão** do paciente (escopo IPS, prazo curto), sem identificador de paciente nem conteúdo clínico.
 - Um **Serviço de Síntese** (novo) recebe o pedido, lê os fatos candidatos, aplica uma **política de seleção determinística e versionada** e usa o Montador Efêmero para produzir o IPS validado.
 - O `Bundle` final fica em um **cache curto** (minutos ou horas) e depois é eliminado.
 - Cada geração grava **evidência sem conteúdo clínico** em um **Arquivo de evidência** (hash, manifesto, fontes, entregas, eliminação).
@@ -14,16 +17,30 @@ O Montador **não muda**: continua sem selecionar fatos, sem resolver conflitos 
 
 ## 1.2 Fluxo de um pedido
 
-1. O PEP pede o IPS de um paciente ao Gateway, com o manifesto e as decisões de conflito, se houver.
-2. O Gateway autentica, verifica organização e finalidade e encaminha o pedido ao Serviço de Síntese.
-3. O Serviço de Síntese consulta o cache. Se houver `Bundle` válido para o mesmo paciente, política e pacote, devolve esse documento.
-4. Sem cache válido, lê os **fatos candidatos** no Servidor FHIR (somente leitura).
-5. Aplica a **política de seleção** e monta o manifesto.
-6. Abre uma sessão no Montador, submete os fatos e recebe `OperationOutcome` com pendências e conflitos. Conflito sem regra e sem decisão impede a finalização.
-7. Chama `$finalize` e recebe o `Bundle` validado, com hash.
-8. Grava o `Bundle` no cache (TTL curto) e registra a evidência no Arquivo.
-9. Devolve o `Bundle` ao Gateway, que o entrega ao PEP.
-10. Se o cliente pedir envio a outra UF, o Despachante lê o `Bundle` do cache, entrega pelo Gateway ao Gateway da plataforma par, e grava o recibo no Arquivo.
+**Etapa A. O paciente gera o QR code**
+
+1. O paciente se autentica no **MeuPEP** (GOV.BR) e escolhe gerar o acesso ao seu IPS, com o prazo da concessão.
+2. O MeuPEP registra o consentimento (`Consent`), emite uma **concessão** (escopo IPS, prazo curto, uso único proposto) e exibe o **QR code**. O QR contém apenas a referência opaca da concessão e o endereço da plataforma.
+
+**Etapa B. O estabelecimento lê o QR e é verificado**
+
+3. O profissional lê o QR no PEP. O PEP envia ao Gateway a referência da concessão, o manifesto e as decisões de conflito, se houver, autenticado com o certificado do estabelecimento. O PEP **não informa o paciente**: ele é resolvido pela concessão.
+4. O Gateway consulta o **cadastro de estabelecimentos**. Se o estabelecimento **não estiver cadastrado ou ativo**, recusa (`403`), registra `AuditEvent` e encerra. Nada é lido do Servidor FHIR.
+5. O Gateway valida a concessão no MeuPEP: autenticidade, prazo, escopo IPS, não revogada e ainda não usada. Concessão inválida, expirada, revogada ou já usada resulta em recusa com `AuditEvent`. Se válida, é consumida e devolve ao Gateway a referência do paciente.
+6. O Gateway encaminha ao Serviço de Síntese o pedido autorizado, com paciente, estabelecimento e finalidade.
+
+**Etapa C. Geração do IPS**
+
+7. O Serviço de Síntese consulta o cache. Se houver `Bundle` válido para o mesmo paciente, política e pacote, devolve esse documento. O cache **não dispensa** as etapas B: cada acesso exige estabelecimento cadastrado e concessão válida.
+8. Sem cache válido, lê os **fatos candidatos** no Servidor FHIR (somente leitura).
+9. Aplica a **política de seleção** e monta o manifesto.
+10. Abre uma sessão no Montador, submete os fatos e recebe `OperationOutcome` com pendências e conflitos. Conflito sem regra e sem decisão impede a finalização.
+11. Chama `$finalize` e recebe o `Bundle` validado, com hash.
+12. Grava o `Bundle` no cache (TTL curto) e registra a evidência no Arquivo, com a referência da concessão e o estabelecimento.
+13. Devolve o `Bundle` ao Gateway, que o entrega ao PEP.
+14. Se o cliente pedir envio a outra UF, o Despachante lê o `Bundle` do cache, entrega pelo Gateway ao Gateway da plataforma par, e grava o recibo no Arquivo. O consentimento do paciente para esse envio é questão em aberto (seção 1.6).
+
+Resultados possíveis para o PEP: `Bundle` (IPS), `OperationOutcome` com pendências, ou recusa (`403`) por estabelecimento não cadastrado ou concessão inválida. A resposta de recusa não revela qual das duas causas ocorreu além do necessário para o atendimento (a definir).
 
 ## 1.3 O que é guardado e por quanto tempo
 
@@ -35,6 +52,8 @@ Todos os prazos são hipóteses a validar com o encarregado de dados.
 | `Bundle` final | Cache curto de IPS (cifrado) | Sim | Minutos ou horas, a definir |
 | Manifesto de seleção | Arquivo de evidência | Só referências | Igual ao da evidência |
 | Evidência | Arquivo de evidência | Não | Alinhado ao Repositório de Auditoria (a definir) |
+| Concessão do paciente (QR) | MeuPEP, com `Consent` | Não | Prazo escolhido pelo paciente; uso único proposto (a definir) |
+| Cadastro de estabelecimentos | Fonte a definir (CNES simulado ou cadastro próprio) | Não | Atualização por quem mantém o cadastro |
 
 Campos da evidência, sem conteúdo clínico:
 
@@ -45,6 +64,7 @@ Campos da evidência, sem conteúdo clínico:
 - versão da política de seleção e hash do manifesto;
 - fontes: id do RAC, versão, identificador RNDS e hash;
 - resultado da validação de assinatura (`valid`, `invalid` ou `indeterminate`), quando exigida;
+- referência da concessão (nunca o conteúdo do QR nem o token) e identificação do estabelecimento que leu o QR;
 - entregas: destino, chave de idempotência, tentativas, estado, instante e recibo do destinatário;
 - registro da eliminação do `Bundle`.
 
@@ -54,13 +74,15 @@ Estas URLs são um contrato próprio do projeto, sugerido por mim, não operaç�
 
 | Operação | Resultado |
 | --- | --- |
-| `POST /ips-requests` (paciente, manifesto, decisões) | `Bundle` `type = document` em `application/fhir+json`, ou `OperationOutcome` com pendências |
+| `POST /ips-requests` (referência da concessão lida do QR, manifesto, decisões) | `Bundle` `type = document` em `application/fhir+json`, `OperationOutcome` com pendências, ou `403` se o estabelecimento não for cadastrado ou a concessão for inválida |
 | `POST /ips-documents/{id}/deliveries` (destino) | Envio à plataforma de outra UF, com outbox e idempotência |
 | `GET /ips-evidence/{ipsId}` | JSON próprio com evidência, sem conteúdo clínico |
 | `POST /ips-evidence/{ipsId}/$verify` (um `Bundle`) | "Hash confere" ou "não confere", sem devolver o documento |
 | `Subscription` com `ips-finalized` e `ips-delivered` | Aviso sem conteúdo clínico |
 
 Leitura humana: vem da narrativa (`Composition.text`) do próprio IPS.
+
+O pedido não recebe identificador de paciente do PEP. A geração, a validação e o consumo da concessão pertencem ao MeuPEP, descrito na proposta de autorização; este contrato só a consome. O formato do QR (por exemplo, URL com referência opaca) e o protocolo entre Gateway e MeuPEP são pontos a decidir.
 
 ## 1.5 Comparação com as outras alternativas
 
@@ -82,7 +104,11 @@ Leitura humana: vem da narrativa (`Composition.text`) do próprio IPS.
 3. **A latência da montagem pode inviabilizar o uso no ponto de cuidado.** Só medição em protótipo decide.
 4. **A taxa de conflito sem regra pode ser alta.** Se for, o resultado comum é "não foi possível gerar", o que enfraquece a promessa "qual é o IPS do paciente X?".
 5. **O que a UF destinatária faz depois da entrega não é controlado.** A evidência prova o que enviamos; a retenção do outro lado precisa entrar no contrato federado.
-6. **Escopo.** A C soma Serviço de Síntese, cache, Arquivo e Despachante; para o protótipo, o recorte mínimo é Síntese, Montador, Arquivo com `$verify` e um envio a uma plataforma par simulada.
+6. **QR code é credencial ao portador.** Quem fotografar ou interceptar o QR antes do uso pode tentar usá-lo, mas só um estabelecimento cadastrado é aceito. Mitigações propostas: prazo curto, uso único, escopo só IPS, QR rotativo e vínculo da concessão ao estabelecimento que a leu. A recusa por concessão já usada precisa ser visível ao paciente no MeuPEP, que mostra o histórico de acessos.
+7. **Cadastro de estabelecimentos.** "Cadastrada" ainda não tem fonte nem critério definidos (CNES simulado, cadastro próprio da plataforma, habilitação por finalidade). Estabelecimento descadastrado depois da leitura do QR deve ser recusado no momento do pedido, não na emissão.
+8. **Conectividade e acessibilidade do paciente.** O fluxo exige celular com o MeuPEP e conta GOV.BR de nível adequado. Sem eles (emergência, paciente inconsciente, sem celular), o fluxo não funciona; o acesso emergencial da proposta de autorização está fora deste recorte.
+9. **Escopo do consentimento.** A concessão cobre a leitura do IPS pelo estabelecimento. O envio a outra UF (Despachante) é um segundo uso e precisa ou de consentimento próprio ou de decisão explícita de que a concessão o cobre. Consentimento dinâmico completo está fora do escopo do protótipo (`pratica.md`), então o protótipo simula a concessão com dados sintéticos.
+10. **Escopo.** A C soma Serviço de Síntese, cache, Arquivo e Despachante; para o protótipo, o recorte mínimo é MeuPEP simulado (emite a concessão e o QR), verificação de estabelecimento cadastrado no Gateway, Síntese, Montador, Arquivo com `$verify` e um envio a uma plataforma par simulada.
 
 ## 1.7 Hipóteses a verificar nos protótipos
 
@@ -95,6 +121,9 @@ Uma verificação não executada permanece pendente, nunca registrada como atend
 | H5: a política resolve a maioria dos casos sem curadoria | Medir a taxa de conflito sem regra em dados sintéticos realistas | Taxa a definir com a equipe | Pendente |
 | H6: RAC substituído após a geração é detectável | Substituir um RAC já usado como fonte (incidente 13 da seção 21) | A evidência identifica os IPS afetados por RAC e versão | Pendente |
 | H7: o cache não serve IPS defasado | Publicar RAC novo durante o TTL e pedir o IPS | Resposta reflete o RAC novo ou sinaliza defasagem | Pendente |
+| H8: só estabelecimento cadastrado com concessão válida acessa o IPS | Testar com estabelecimento não cadastrado, cadastrado e descadastrado; concessão válida, expirada, revogada, já usada e de outro escopo | Todo caso inválido recebe recusa, não lê o Servidor FHIR e gera `AuditEvent`; o caso válido devolve o `Bundle` | Pendente |
+| H9: o QR e os rastros não expõem dado do paciente | Inspecionar o conteúdo do QR, logs, métricas e rastros em um fluxo completo com dados sintéticos | Nenhum identificador de paciente, token ou conteúdo clínico no QR, nos logs e nos rastros | Pendente |
+| H10: o QR de uso único funciona no ponto de cuidado | Medir o tempo da leitura até a resposta, incluindo a validação da concessão, e repetir a leitura do mesmo QR | Tempo a definir com a equipe; a segunda leitura é recusada | Pendente |
 
 
 # Parte 2. Como montar o Montador Efêmero

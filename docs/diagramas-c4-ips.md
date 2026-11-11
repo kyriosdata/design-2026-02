@@ -2,11 +2,13 @@
 
 ## 1. Nível 1: contexto
 
-A plataforma recebe o pedido do PEP, monta o IPS na hora e devolve o `Bundle`. O envio à outra UF só acontece por pedido explícito, e a organização responsável pela política é quem assume a autoria clínica.
+O paciente gera um QR code no MeuPEP, o estabelecimento o lê no PEP e, se estiver cadastrado e a concessão for válida, a plataforma monta o IPS na hora e devolve o `Bundle`. O MeuPEP segue a proposta de autorização com GOV.BR, alternativa em avaliação. O envio à outra UF só acontece por pedido explícito, e a organização responsável pela política é quem assume a autoria clínica.
 
 ```mermaid
 flowchart TB
-    prof["<b>Profissional de saúde</b><br/>usa o PEP no atendimento<br/>[Pessoa]"]
+    pac["<b>Paciente</b><br/>gera o QR code no celular<br/>[Pessoa]"]
+    meupep["<b>MeuPEP</b><br/>app do paciente, GOV.BR<br/>registra o consentimento e emite<br/>a concessão e o QR code<br/>[Sistema externo · em avaliação]"]
+    prof["<b>Profissional de saúde</b><br/>lê o QR code no PEP<br/>[Pessoa]"]
     org["<b>Organização responsável</b><br/>pela política de seleção<br/>[Pessoa ou organização]"]
     aud["<b>Auditor e encarregado de dados</b><br/>[Pessoa]"]
     pep["<b>PEP simulado</b><br/>sistema cliente FHIR<br/>[Sistema externo]"]
@@ -14,9 +16,12 @@ flowchart TB
     uf["<b>Plataforma estadual de outra UF</b><br/>par<br/>[Sistema externo]"]
     rnds["<b>RNDS simulada</b><br/>documentos e registros<br/>[Sistema externo]"]
 
-    prof -->|"usa"| pep
-    pep -->|"pede IPS"| plat
-    plat -->|"devolve"| pep
+    pac -->|"autentica e gera o QR"| meupep
+    pac -.->|"mostra o QR"| prof
+    prof -->|"lê o QR no"| pep
+    pep -->|"pede IPS com a concessão do QR"| plat
+    plat -->|"valida e consome a concessão"| meupep
+    plat -->|"devolve o IPS ou recusa"| pep
     org -->|"aprova a política"| plat
     aud -->|"consulta evidência e verifica hash"| plat
     plat -->|"envia IPS, só sob pedido"| uf
@@ -25,24 +30,26 @@ flowchart TB
     classDef foco fill:#e3f0fb,stroke:#2b78d4,stroke-width:2px
     classDef ext stroke-dasharray:5 4
     class plat foco
-    class pep,uf,rnds ext
+    class pep,uf,rnds,meupep ext
 ```
 
-Não mostra: Serviço de Documentos RNDS, validação de assinaturas, auditoria e telemetria.
+Não mostra: Serviço de Documentos RNDS, validação de assinaturas, auditoria e telemetria. A linha tracejada é a leitura do QR na tela do celular, sem comunicação entre sistemas.
 
 ---
 
 ## 2. Nível 2: contêineres
 
-O Serviço de Síntese orquestra o pedido: lê os fatos, usa o Montador, grava o `Bundle` no cache curto e a evidência no Arquivo. O Despachante só atua quando o cliente pede o envio.
+O Gateway só encaminha o pedido se o estabelecimento estiver no cadastro e a concessão do MeuPEP for válida. O Serviço de Síntese orquestra o pedido: lê os fatos, usa o Montador, grava o `Bundle` no cache curto e a evidência no Arquivo. O Despachante só atua quando o cliente pede o envio.
 
 ```mermaid
 flowchart TB
     pep["<b>PEP simulado</b><br/>[sistema externo]"]
+    meupep["<b>MeuPEP simulado</b><br/>[sistema externo · em avaliação]<br/>consentimento, concessão e QR"]
     uf["<b>Plataforma de outra UF</b><br/>[sistema externo]"]
 
     subgraph plat["Plataforma de Interoperabilidade em Saúde (instância estadual)"]
-        gw["<b>Gateway de Integração</b><br/>[existente]<br/>autentica, aplica organização e finalidade,<br/>registra AuditEvent"]
+        gw["<b>Gateway de Integração</b><br/>[existente]<br/>autentica, aplica organização e finalidade,<br/>verifica cadastro e concessão,<br/>registra AuditEvent"]
+        cad[("<b>Cadastro de estabelecimentos</b><br/>[a definir · dados]<br/>fonte e critério em aberto")]
         fhir["<b>Servidor FHIR R4</b><br/>[existente]<br/>fonte dos fatos candidatos,<br/>acesso somente leitura"]
         sint["<b>Serviço de Síntese</b><br/>[novo]<br/>aplica a política de seleção versionada<br/>e orquestra a montagem a cada pedido"]
         cache[("<b>Cache curto de IPS</b><br/>[novo · dados]<br/>Bundle final cifrado,<br/>TTL de minutos ou horas")]
@@ -51,7 +58,9 @@ flowchart TB
         desp["<b>Despachante de Envio</b><br/>[novo]<br/>entrega o IPS à outra UF só por<br/>pedido explícito (outbox, idempotência)"]
     end
 
-    pep <-->|"pede IPS; recebe o Bundle"| gw
+    pep <-->|"pede IPS com a concessão do QR; recebe o Bundle ou a recusa"| gw
+    gw -->|"estabelecimento cadastrado?"| cad
+    gw <-->|"valida e consome a concessão"| meupep
     uf <-->|"federação direta"| gw
     gw -->|"encaminha pedido autorizado"| sint
     sint -->|"lê candidatos"| fhir
@@ -65,10 +74,10 @@ flowchart TB
     classDef novo fill:#e3f0fb,stroke:#2b78d4,stroke-width:2px
     classDef ext stroke-dasharray:5 4
     class sint novo
-    class pep,uf ext
+    class pep,uf,meupep ext
 ```
 
-Não mostra: Validação e Terminologia e Repositório Efêmero (dentro do Montador, ver diagrama 4), assinatura digital e auditoria. De onde o Serviço de Síntese lê os RACs (Servidor FHIR ou Serviço de Documentos RNDS) está em aberto.
+Não mostra: Validação e Terminologia e Repositório Efêmero (dentro do Montador, ver diagrama 4), assinatura digital e auditoria. Em aberto: de onde o Serviço de Síntese lê os RACs (Servidor FHIR ou Serviço de Documentos RNDS), a fonte do cadastro de estabelecimentos e o protocolo entre Gateway e MeuPEP.
 
 ---
 
@@ -77,16 +86,35 @@ Não mostra: Validação e Terminologia e Repositório Efêmero (dentro do Monta
 ```mermaid
 sequenceDiagram
     autonumber
+    participant P as Paciente (MeuPEP)
     participant PEP as PEP simulado
     participant GW as Gateway
+    participant CAD as Cadastro de estabelecimentos
+    participant MP as MeuPEP simulado
     participant S as Serviço de Síntese
     participant C as Cache curto
     participant F as Servidor FHIR
     participant M as Montador Efêmero
     participant A as Arquivo de evidência
 
-    PEP->>GW: pede IPS do paciente (manifesto e decisões)
-    GW->>S: pedido autorizado
+    P->>MP: autentica, escolhe prazo e gera o QR
+    MP-->>P: QR com referência opaca da concessão
+    P-->>PEP: estabelecimento lê o QR
+    PEP->>GW: pede IPS com a concessão (manifesto e decisões)
+    GW->>CAD: estabelecimento cadastrado?
+    alt não cadastrado
+        GW-->>PEP: 403 (AuditEvent registrado)
+    else cadastrado
+        GW->>MP: valida e consome a concessão
+        alt concessão inválida, expirada, revogada ou usada
+            MP-->>GW: negada
+            GW-->>PEP: 403 (AuditEvent registrado)
+        else concessão válida
+            MP-->>GW: referência do paciente
+            GW->>S: pedido autorizado (paciente, estabelecimento, finalidade)
+        end
+    end
+    Note over GW,S: os passos abaixo só ocorrem se o pedido foi autorizado
     S->>C: consulta Bundle válido
     alt Bundle válido em cache
         C-->>S: Bundle
@@ -102,6 +130,8 @@ sequenceDiagram
     S-->>GW: Bundle
     GW-->>PEP: Bundle
 ```
+
+O cache não dispensa a verificação do cadastro e da concessão: ela ocorre antes de qualquer consulta ao cache.
 
 Em aberto: se um cache hit registra novo evento de evidência, e como o cache é invalidado quando chega um RAC novo durante o TTL.
 
