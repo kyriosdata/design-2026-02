@@ -1,6 +1,8 @@
 
 # Parte 1. IPS sob demanda com cache curto
 
+> **Nota:** possivelmente precisa de ajustes para contemplar telemedicina.
+
 ## 1.1 Resumo
 
 **"qual é o IPS do paciente X?"** gerando o documento **no momento do pedido**, sem repositório longitudinal.

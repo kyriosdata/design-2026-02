@@ -1,5 +1,7 @@
 # Diagramas C4: IPS sob demanda e Montador Efêmero
 
+> **Nota:** possivelmente precisa de ajustes para contemplar telemedicina.
+
 ## 1. Nível 1: contexto
 
 O paciente gera um QR code no MeuPEP, o estabelecimento o lê no PEP e, se estiver cadastrado e a concessão for válida, a plataforma monta o IPS na hora e devolve o `Bundle`. O MeuPEP segue a proposta de autorização com GOV.BR, alternativa em avaliação. O envio à outra UF só acontece por pedido explícito, e a organização responsável pela política é quem assume a autoria clínica.
