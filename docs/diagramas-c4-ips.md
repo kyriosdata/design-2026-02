@@ -4,55 +4,68 @@
 
 ## 1. Nível 1: contexto
 
-O paciente gera um QR code no MeuPEP, o estabelecimento o lê no PEP e, se estiver cadastrado e a concessão for válida, a plataforma monta o IPS na hora e devolve o `Bundle`. O MeuPEP segue a proposta de autorização com GOV.BR, alternativa em avaliação. O envio à outra UF só acontece por pedido explícito, e a organização responsável pela política é quem assume a autoria clínica.
+Este diagrama recorta o diagrama de contexto geral da plataforma para o fluxo do IPS. O paciente gera o QR code no **MeuPEP**, o sistema do paciente, autenticado pelo GOV.BR. A clínica lê o QR na sua Aplicação Clínica e a plataforma monta o IPS na hora e devolve o `Bundle`, desde que o acesso seja autorizado: estabelecimento cadastrado, finalidade e consentimento. O GOV.BR só autentica; a decisão de autorização é do Servidor AuthZ da plataforma, que valida a concessão do QR no MeuPEP.
+
+- **Opção A:** a clínica e o paciente estão na mesma UF.
+- **Opção B:** a clínica está em outra UF, e a plataforma dela pede o IPS à plataforma de origem do paciente, pelo contrato federado.
+
+O envio do IPS a outra UF só acontece por pedido explícito, e a organização responsável pela política é quem assume a autoria clínica.
 
 ```mermaid
 flowchart TB
-    pac["<b>Paciente</b><br/>gera o QR code no celular<br/>[Pessoa]"]
-    meupep["<b>MeuPEP</b><br/>app do paciente, GOV.BR<br/>registra o consentimento e emite<br/>a concessão e o QR code<br/>[Sistema externo · em avaliação]"]
-    prof["<b>Profissional de saúde</b><br/>lê o QR code no PEP<br/>[Pessoa]"]
+    pac["<b>Pessoa Atendida (Paciente)</b><br/>gera o QR code no MeuPEP<br/>[Pessoa]"]
+    prof["<b>Profissional de Saúde</b><br/>lê o QR code na aplicação da clínica<br/>[Pessoa]"]
+    gestor["<b>Gestor (Secretaria)</b><br/>mantém o cadastro de estabelecimentos<br/>[Pessoa]"]
+    dpo["<b>DPO / Encarregado de Dados</b><br/>base legal, auditoria e consentimento<br/>[Pessoa]"]
     org["<b>Organização responsável</b><br/>pela política de seleção<br/>[Pessoa ou organização]"]
-    aud["<b>Auditor e encarregado de dados</b><br/>[Pessoa]"]
-    pep["<b>PEP simulado</b><br/>sistema cliente FHIR<br/>[Sistema externo]"]
-    plat["<b>Plataforma de Interoperabilidade em Saúde</b><br/>[Instância estadual]<br/>Monta o IPS a cada pedido,<br/>guarda em cache curto e<br/>registra a evidência"]
-    uf["<b>Plataforma estadual de outra UF</b><br/>par, p. ex. UF de origem do paciente<br/>[Sistema externo]"]
-    rnds["<b>RNDS simulada</b><br/>documentos e registros<br/>[Sistema externo]"]
+    meupep["<b>MeuPEP</b><br/>sistema do paciente: registra o consentimento<br/>e emite a concessão e o QR code<br/>[Sistema externo · em avaliação]"]
+    ac["<b>Aplicação Clínica / PEP da clínica (AC)</b><br/>lê o QR e pede o IPS<br/>[Sistema externo]"]
+    govbr["<b>GOV.BR</b><br/>apenas autenticação (AuthN)<br/>[Sistema externo]"]
+    cad["<b>Sistema de Cadastro de Estabelecimento</b><br/>estabelecimentos participantes<br/>[Sistema externo]"]
+    plat["<b>Plataforma Estadual de Interoperabilidade em Saúde</b><br/>[Instância estadual]<br/>Autoriza o acesso, monta o IPS a cada<br/>pedido, guarda em cache curto e<br/>registra a evidência"]
+    uf["<b>Outra Plataforma Estadual</b><br/>par, p. ex. UF de origem do paciente<br/>[Sistema externo]"]
+    rnds["<b>RNDS Simulada</b><br/>documentos e registros<br/>[Sistema externo]"]
 
-    pac -->|"autentica e gera o QR"| meupep
+    pac -->|"autentica-se e gera o QR"| meupep
     pac -.->|"mostra o QR"| prof
-    prof -->|"lê o QR no"| pep
-    pep -->|"pede IPS com a concessão do QR"| plat
+    prof -->|"lê o QR na"| ac
+    ac -->|"pede IPS com a concessão do QR;<br/>recebe o IPS ou a recusa [FHIR]"| plat
+    meupep -->|"delega a autenticação [OIDC]"| govbr
+    ac -->|"delega a autenticação [OIDC]"| govbr
+    plat -->|"valida o token [OIDC]"| govbr
     plat -->|"valida e consome a concessão"| meupep
-    plat -->|"devolve o IPS ou recusa"| pep
+    gestor -->|"cadastra e mantém"| cad
+    plat -->|"consulta estabelecimentos participantes"| cad
     org -->|"aprova a política"| plat
-    aud -->|"consulta evidência e verifica hash"| plat
-    plat -->|"envia IPS, só sob pedido"| uf
-    plat <-->|"opção B: pede o IPS à UF de origem do paciente"| uf
-    plat <-->|"publica e consulta RACs"| rnds
+    dpo -->|"audita e verifica consentimento"| plat
+    plat <-->|"IPS interestadual [contrato federado]:<br/>envio sob pedido e, na opção B, pedido de IPS"| uf
+    plat <-->|"publica e consulta RACs [FHIR]"| rnds
 
     classDef foco fill:#e3f0fb,stroke:#2b78d4,stroke-width:2px
     classDef ext stroke-dasharray:5 4
     class plat foco
-    class pep,uf,rnds,meupep ext
+    class meupep,ac,govbr,cad,uf,rnds ext
 ```
 
-Não mostra: Serviço de Documentos RNDS, validação de assinaturas, auditoria e telemetria. A linha tracejada é a leitura do QR na tela do celular, sem comunicação entre sistemas.
+Não mostra: Operador da Plataforma, Aplicação Administrativa e API SISCAN do diagrama de contexto geral, que não participam do fluxo do IPS, nem a validação de assinaturas e a telemetria. A linha tracejada é a leitura do QR na tela do celular, sem comunicação entre sistemas.
 
 ---
 
 ## 2. Nível 2: contêineres
 
-O Gateway só encaminha o pedido se o estabelecimento estiver no cadastro e a concessão do MeuPEP for válida. O Serviço de Síntese orquestra o pedido: lê os fatos, usa o Montador, grava o `Bundle` no cache curto e a evidência no Arquivo. O Despachante só atua quando o cliente pede o envio.
+O Gateway encaminha o pedido ao Servidor AuthZ, que decide o acesso: estabelecimento (consultado no Sistema de Cadastro), vínculo profissional, finalidade e consentimento. O consentimento e a concessão do QR são do MeuPEP, o sistema do paciente; o AuthZ os valida e os consome. Só um pedido autorizado chega ao Serviço de Síntese, que orquestra o pedido: lê os fatos, usa o Montador, grava o `Bundle` no cache curto e a evidência no Arquivo. O Despachante só atua quando o cliente pede o envio. Na opção B, o Gateway da UF visitada pede o IPS ao Gateway da UF de origem, onde este mesmo fluxo se repete.
 
 ```mermaid
 flowchart TB
-    pep["<b>PEP simulado</b><br/>[sistema externo]"]
-    meupep["<b>MeuPEP simulado</b><br/>[sistema externo · em avaliação]<br/>consentimento, concessão e QR"]
-    uf["<b>Plataforma de outra UF</b><br/>[sistema externo]"]
+    meupep["<b>MeuPEP</b><br/>[sistema externo · em avaliação]<br/>sistema do paciente: consentimento,<br/>concessão e QR"]
+    ac["<b>Aplicação Clínica / PEP da clínica (AC)</b><br/>[sistema externo]<br/>lê o QR e pede o IPS"]
+    govbr["<b>GOV.BR</b><br/>[sistema externo]<br/>apenas autenticação (AuthN)"]
+    cad["<b>Sistema de Cadastro de Estabelecimento</b><br/>[sistema externo]"]
+    uf["<b>Outra Plataforma Estadual</b><br/>[sistema externo]"]
 
-    subgraph plat["Plataforma de Interoperabilidade em Saúde (instância estadual)"]
-        gw["<b>Gateway de Integração</b><br/>[existente]<br/>autentica, aplica organização e finalidade,<br/>verifica cadastro e concessão,<br/>registra AuditEvent"]
-        cad[("<b>Cadastro de estabelecimentos</b><br/>[a definir · dados]<br/>fonte e critério em aberto")]
+    subgraph plat["Plataforma Estadual de Interoperabilidade em Saúde"]
+        gw["<b>Gateway de Integração</b><br/>[existente]<br/>autentica, aplica organização e finalidade,<br/>registra AuditEvent"]
+        authz["<b>Servidor AuthZ</b><br/>[existente]<br/>decide o acesso: estabelecimento, vínculo,<br/>finalidade e consentimento;<br/>valida e consome a concessão do QR"]
         fhir["<b>Servidor FHIR R4</b><br/>[existente]<br/>fonte dos fatos candidatos,<br/>acesso somente leitura"]
         sint["<b>Serviço de Síntese</b><br/>[novo]<br/>aplica a política de seleção versionada<br/>e orquestra a montagem a cada pedido"]
         cache[("<b>Cache curto de IPS</b><br/>[novo · dados]<br/>Bundle final cifrado,<br/>TTL de minutos ou horas")]
@@ -61,10 +74,14 @@ flowchart TB
         desp["<b>Despachante de Envio</b><br/>[novo]<br/>entrega o IPS à outra UF só por<br/>pedido explícito (outbox, idempotência)"]
     end
 
-    pep <-->|"pede IPS com a concessão do QR; recebe o Bundle ou a recusa"| gw
-    gw -->|"estabelecimento cadastrado?"| cad
-    gw <-->|"valida e consome a concessão"| meupep
-    uf <-->|"federação direta: envio sob pedido e, na opção B, pedido de IPS"| gw
+    ac <-->|"pede IPS com a concessão do QR;<br/>recebe o Bundle ou a recusa"| gw
+    ac -->|"delega a autenticação [OIDC]"| govbr
+    meupep -->|"delega a autenticação [OIDC]"| govbr
+    gw <-->|"consulta a autorização"| authz
+    authz <-->|"valida e consome a concessão"| meupep
+    authz -->|"valida o token [OIDC]"| govbr
+    authz -->|"consulta o estabelecimento"| cad
+    uf <-->|"federação direta: envio sob pedido e,<br/>na opção B, pedido de IPS"| gw
     gw -->|"encaminha pedido autorizado"| sint
     sint -->|"lê candidatos"| fhir
     sint <-->|"grava e consulta"| cache
@@ -77,10 +94,10 @@ flowchart TB
     classDef novo fill:#e3f0fb,stroke:#2b78d4,stroke-width:2px
     classDef ext stroke-dasharray:5 4
     class sint novo
-    class pep,uf,meupep ext
+    class meupep,ac,govbr,cad,uf ext
 ```
 
-Não mostra: Validação e Terminologia e Repositório Efêmero (dentro do Montador), assinatura digital e auditoria. Em aberto: de onde o Serviço de Síntese lê os RACs (Servidor FHIR ou Serviço de Documentos RNDS), a fonte do cadastro de estabelecimentos e o protocolo entre Gateway e MeuPEP.
+Não mostra: Validação e Terminologia e Repositório Efêmero (dentro do Montador), assinatura digital e auditoria. Em aberto: de onde o Serviço de Síntese lê os RACs (Servidor FHIR ou Serviço de Documentos RNDS), o protocolo entre o Servidor AuthZ e o MeuPEP (o MeuPEP segue a proposta de autorização com GOV.BR, alternativa em avaliação) e entre o Gateway e o Servidor AuthZ.
 
 ---
 
