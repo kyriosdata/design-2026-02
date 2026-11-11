@@ -13,7 +13,7 @@ flowchart TB
     aud["<b>Auditor e encarregado de dados</b><br/>[Pessoa]"]
     pep["<b>PEP simulado</b><br/>sistema cliente FHIR<br/>[Sistema externo]"]
     plat["<b>Plataforma de Interoperabilidade em Saúde</b><br/>[Instância estadual]<br/>Monta o IPS a cada pedido,<br/>guarda em cache curto e<br/>registra a evidência"]
-    uf["<b>Plataforma estadual de outra UF</b><br/>par<br/>[Sistema externo]"]
+    uf["<b>Plataforma estadual de outra UF</b><br/>par, p. ex. UF de origem do paciente<br/>[Sistema externo]"]
     rnds["<b>RNDS simulada</b><br/>documentos e registros<br/>[Sistema externo]"]
 
     pac -->|"autentica e gera o QR"| meupep
@@ -25,6 +25,7 @@ flowchart TB
     org -->|"aprova a política"| plat
     aud -->|"consulta evidência e verifica hash"| plat
     plat -->|"envia IPS, só sob pedido"| uf
+    plat <-->|"opção B: pede o IPS à UF de origem do paciente"| uf
     plat <-->|"publica e consulta RACs"| rnds
 
     classDef foco fill:#e3f0fb,stroke:#2b78d4,stroke-width:2px
@@ -61,7 +62,7 @@ flowchart TB
     pep <-->|"pede IPS com a concessão do QR; recebe o Bundle ou a recusa"| gw
     gw -->|"estabelecimento cadastrado?"| cad
     gw <-->|"valida e consome a concessão"| meupep
-    uf <-->|"federação direta"| gw
+    uf <-->|"federação direta: envio sob pedido e, na opção B, pedido de IPS"| gw
     gw -->|"encaminha pedido autorizado"| sint
     sint -->|"lê candidatos"| fhir
     sint <-->|"grava e consulta"| cache
@@ -81,7 +82,7 @@ Não mostra: Validação e Terminologia e Repositório Efêmero (dentro do Monta
 
 ---
 
-## 3. Sequência de um pedido
+## 3. Sequência de um pedido (opção A: mesma UF)
 
 ```mermaid
 sequenceDiagram
@@ -134,6 +135,55 @@ sequenceDiagram
 O cache não dispensa a verificação do cadastro e da concessão: ela ocorre antes de qualquer consulta ao cache.
 
 Em aberto: se um cache hit registra novo evento de evidência, e como o cache é invalidado quando chega um RAC novo durante o TTL.
+
+---
+
+## 3B. Sequência de um pedido da opção B (clínica em outra UF)
+
+O QR é emitido pela UF de origem do paciente. A UF visitada reconhece pelo QR que é de outra UF e pede o IPS à UF de origem, por federação direta entre pares. O PEP só fala com o Gateway da própria UF.
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant P as Paciente (MeuPEP)
+    participant PEP as PEP da clínica
+    participant GV as Gateway (UF visitada)
+    participant CAD as Cadastro (UF visitada)
+    participant GO as Gateway (UF de origem)
+    participant MP as MeuPEP e consentimento (UF de origem)
+    participant S as Síntese e Montador (UF de origem)
+    participant A as Arquivo de evidência (UF de origem)
+
+    P->>MP: autentica e pede o QR do IPS
+    MP-->>P: QR (referência opaca e UF emissora)
+    P-->>PEP: clínica lê o QR
+    PEP->>GV: pede IPS com a concessão (manifesto e decisões)
+    GV->>CAD: estabelecimento cadastrado?
+    alt não cadastrado
+        GV-->>PEP: 403 (AuditEvent registrado)
+    else cadastrado
+        Note over GV: QR indica outra UF, então não valida a concessão localmente
+        GV->>GO: pedido federado (concessão, estabelecimento, finalidade)
+        Note over GO: autentica a plataforma par e confere se está habilitada
+        GO->>MP: valida e consome a concessão
+        alt par não habilitado ou concessão inválida
+            GO-->>GV: recusa
+            GV-->>PEP: 403 (AuditEvent registrado)
+        else autorizado
+            MP-->>GO: referência do paciente
+            GO->>S: pedido autorizado
+            S->>S: gera o IPS (cache, política, Montador)
+            S->>A: registra evidência (estabelecimento e UF visitada)
+            S-->>GO: Bundle
+            GO-->>GV: Bundle
+            Note over GV: não grava o Bundle, só a evidência de recebimento (hash)
+            GV-->>PEP: Bundle
+        end
+    end
+    Note over GV,GO: UF de origem indisponível ou fora do prazo: erro explícito ao PEP, nunca "sem IPS"
+```
+
+Em aberto: se a UF de origem confia no cadastro da UF visitada ou mantém verificação própria, o que o QR revela da UF emissora, o tempo limite da chamada federada e a retenção do lado da UF visitada.
 
 ---
 
