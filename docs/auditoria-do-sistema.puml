@@ -1,0 +1,35 @@
+@startuml
+title Arquitetura de Auditoria Imutável e Particionamento Semanal (FHIR AuditEvent)
+
+skinparam componentStyle rectangle
+skinparam backgroundColor #FFFFFF
+
+actor "Profissional / Sistema\nConsumidor" as User
+
+package "Plataforma Estadual de Interoperabilidade" {
+  component "API Gateway &\nControle de Acesso" as Gateway
+  component "Serviço Clínico\n(Orquestrador)" as ClinicalSvc
+  component "Serviço de Auditoria\n(Coletor Assíncrono)" as AuditSvc
+  component "Job de Governança\n(Rotina Semanal)" as PurgeJob
+}
+
+database "Servidor FHIR\n(Dados Clínicos - 20 anos)" as FHIR
+
+database "immudb (Repositório Imutável - Merkle Tree)" as ImmuDB {
+  folder "Partição Semana Atual\n(audit_2026_W48 - Ativa)" as WeekActive
+  folder "Partições Anteriores\n(audit_2026_W47... - Somente Leitura)" as WeekClosed
+  folder "Partição Expirada\n(Prazo atingido)" as WeekExpired
+}
+
+User --> Gateway : 1. Requisição + JWT
+Gateway --> ClinicalSvc : 2. Encaminha chamada autorizada
+ClinicalSvc --> FHIR : 3. Lê / Grava dado clínico
+
+Gateway ..> AuditSvc : AuditEvent (Login / Decisão de Acesso)
+ClinicalSvc ..> AuditSvc : AuditEvent (Leitura / Escrita / Propósito)
+AuditSvc --> WeekActive : 4. Grava append-only\n(Metadados + Hash, sem dado clínico)
+
+PurgeJob --> WeekExpired : [Semanal] Descarta bloco\n(Drop Bucket)
+PurgeJob --> WeekActive : [Semanal] Grava AuditEvent (action: E)\ncomprovando o expurgo
+
+@enduml
